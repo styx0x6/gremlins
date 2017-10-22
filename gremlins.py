@@ -81,21 +81,27 @@ KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "tr
                  "trident media guard"]
 
 
-def format_entry(name=None):
+def iprange_to_cidr(ip_range=None):
     """
-
-    :param name:
-    :return:
+    Format an IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y') to its corresponding CIDR list.
+    :param ip_range: IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y').
+    :return: IP range addresses string as its corresponding CIDR string list.
     """
-    # TODO to finish
-    """
-    name, ip_range = line.split(IBL_SEP)
-    ip_cidr = format_range_as_cidr
-    [ipaddr for ipaddr in
-     ipaddress.summarize_address_range(ipaddress.IPv4Address(start_ip), ipaddress.IPv4Address(end_ip))]
-    return
-    """
-    pass
+    cidr_ip_range_list = []
+    ip_start, ip_end = ip_range.split("-")
+    try:
+        cidr_ip_range_list.extend(net.with_prefixlen for net in
+                                  ipaddress.summarize_address_range(ipaddress.IPv4Address(ip_start),
+                                                                    ipaddress.IPv4Address(ip_end)))
+    except ipaddress.AddressValueError as ave:
+        raise ave
+    except ipaddress.NetmaskValueError as nve:
+        raise nve
+    except ValueError as ve:
+        raise ve
+    except TypeError as te:
+        raise te
+    return cidr_ip_range_list
 
 
 def get_ibl_list(color=True, run_output=True):
@@ -125,14 +131,14 @@ def get_ibl_list(color=True, run_output=True):
             working_list = []
             if r.headers.get('content-type') == 'application/x-gzip':
                 if run_output:
-                    sys.stdout.write("[get_ibl_list] Decompress and decode file... ")
+                    sys.stdout.write("[get_ibl_list] Decompress and decode file...           ")
                 working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
                 if run_output:
                     sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
             # case below should never occurs
             elif r.headers.get('content-type') == 'gzip':
                 if run_output:
-                    sys.stdout.write("[get_ibl_list] Decode file... ")
+                    sys.stdout.write("[get_ibl_list] Decode file...                   ")
                 working_list = r.content.decode(encoding=IBL_LIST_ENC).split("\n")
                 if run_output:
                     sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
@@ -142,18 +148,19 @@ def get_ibl_list(color=True, run_output=True):
 
             # Parse for concerned lines
             if run_output:
-                sys.stdout.write("[get_ibl_list] Parse '%s' from iBlockList... " % _list)
+                sys.stdout.write("[get_ibl_list] Parse '%s' from iBlockList...    " % _list)
             # remove the 2 first header lines from the blocking list
             working_list = working_list[2:]
             for line in working_list:
                 # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
                 if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in KEYWORDS_LIST):
                     #  format entries
-                    name, ip_range = line.split(IBL_SEP)
-                    # TODO format as cidr
-                    #  clean duplicate entries
-                    if (name, ip_range) not in ibl_list:
-                        ibl_list.extend([(name, ip_range)])
+                    name, i = line.split(IBL_SEP)
+                    cidr_ip_range_list = iprange_to_cidr(i)
+                    for cidr_ip_range in cidr_ip_range_list:
+                        #  clean duplicate entries
+                        if (name, cidr_ip_range) not in ibl_list:
+                            ibl_list.extend([(name, cidr_ip_range)])
             if run_output:
                 sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
         else:
@@ -248,30 +255,31 @@ def get_list(color=True, run_output=True, ibl=True, ripe=True):
     :param ripe: Should use the RIPE as information source. True by default.
     :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
-    li = []
+    list = []
     if ibl:
-        li.extend(get_ibl_list(color, run_output))
+        list.extend(get_ibl_list(color, run_output))
         if run_output:
             sys.stdout.write("[get_list] List from iBlockList generated\n")
     if ripe:
-        li.extend(get_ripe_list(color, run_output))
+        list.extend(get_ripe_list(color, run_output))
         if run_output:
             sys.stdout.write("[get_list] List from the RIPE generated\n")
-    return li
+    return list
 
 
-# TODO Printing to be finished
 def cmd_list(color=True, run_output=True, ibl=True, ripe=True):
     """
-    Run the 'list' command.
+    Run the 'list' command. Print each line to a CSV format "<NAME>,<CIDR_IP_RANGE>".
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     """
     full_list = get_list(color, run_output, ibl, ripe)
-    # TODO print it properly
-    sys.stdout.write("[cmd_list] LIST PRINTING TO BE DONE\n")
+    if run_output:
+        sys.stdout.write("[cmd_list] Printing the list...\n\n")
+    for (name, cidr_ip_range) in full_list:
+        sys.stdout.write(name + "," + cidr_ip_range + "\n")
 
 
 # TODO Iptable commands to be finished + list mode to manage
