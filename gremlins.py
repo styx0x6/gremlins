@@ -44,13 +44,7 @@ OS_IS_POSIX = True if os.name is 'posix' else False
 BASENAME_PATH = os.path.basename(sys.argv[0])
 BASENAME_PROG = ("python " if OS_IS_WIN else "") + ("\"%s\"" % BASENAME_PATH if " " in BASENAME_PATH else BASENAME_PATH)
 
-DEFAULT_SSH_PORT = '22'
-DEFAULT_FBX_HTTP_PORT = '80'
-DEFAULT_FBX_HTTPS_PORT = '48597'
-DEFAULT_UTM9_HTTPS_PORT = '4444'
-DEFAULT_PFSENSE_HTTPS_PORT = '443'
-DEFAULT_OPNSENSE_HTTPS_PORT = '443'
-
+# Gremlins static settings
 CMD_LIST = 'list'
 CMD_IPTABLES = 'iptables'
 CMD_FBXOS = 'fbxos'
@@ -61,8 +55,14 @@ CMD_OPNSENSE = 'opnsense'
 OK = "OK!"
 NOK = "NOK"
 
-# iBlockList settings
-IBL_LISTS = ['bt_level1', 'bt_level2']
+DEFAULT_SSH_PORT = '22'
+DEFAULT_FBX_HTTP_PORT = '80'
+DEFAULT_FBX_HTTPS_PORT = '48597'
+DEFAULT_UTM9_HTTPS_PORT = '4444'
+DEFAULT_PFSENSE_HTTPS_PORT = '443'
+DEFAULT_OPNSENSE_HTTPS_PORT = '443'
+
+# iBlockList static settings
 IBL_HTTP_FILEFORMAT = 'p2p'
 IBL_HTTP_ARCHIVEFORMAT = 'gz'
 IBL_HTTP_URL = "http://list.iblocklist.com/index.php?list=%s&fileformat=%s&archiveformat=%s" \
@@ -70,13 +70,15 @@ IBL_HTTP_URL = "http://list.iblocklist.com/index.php?list=%s&fileformat=%s&archi
 IBL_LIST_ENC = 'utf-8'
 IBL_SEP = ":"
 
-# RIPE settings
+# RIPE static settings
 RIPE_HTTP_RESP_TYPE = 'json'
 RIPE_HTTP_REST_URL = "https://rest.db.ripe.net/search.%s?query-string=%s&flags=no-filtering" \
                      % (RIPE_HTTP_RESP_TYPE, "%s")
 RIPE_JSON_NAME_LIST = ['netname', 'descr']
 RIPE_JSON_INETNUM = 'inetnum'
 
+# Information gathering settings
+IBL_LISTS = ['bt_level1', 'bt_level2']
 KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "trident medi guard",
                  "trident media guard"]
 
@@ -104,12 +106,13 @@ def iprange_to_cidr(ip_range=None):
     return cidr_ip_range_list
 
 
-# TODO Put MACROS as arguments
-def get_ibl_list(color=True, run_output=True):
+def get_ibl_list(color=True, run_output=True, keywords_list=[], ibl_lists=[]):
     """
     Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
+    :param ibl_lists: The iBlockList list to parse.
     :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     ibl_list = []
@@ -117,7 +120,7 @@ def get_ibl_list(color=True, run_output=True):
     if run_output:
         sys.stdout.write("\n")
 
-    for _list in IBL_LISTS:
+    for _list in ibl_lists:
         if run_output:
             sys.stdout.write("[get_ibl_list] Get list '%s' from iBlockList... " % _list)
         r = requests.get(IBL_HTTP_URL % _list)
@@ -154,7 +157,7 @@ def get_ibl_list(color=True, run_output=True):
             working_list = working_list[2:]
             for line in working_list:
                 # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in KEYWORDS_LIST):
+                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in keywords_list):
                     #  format entries
                     name, i = line.split(IBL_SEP)
                     cidr_ip_range_list = iprange_to_cidr(i)
@@ -173,12 +176,12 @@ def get_ibl_list(color=True, run_output=True):
 
 
 # TODO RIPE list to finish
-# TODO Put MACROS as arguments
-def get_ripe_list(color=True, run_output=True):
+def get_ripe_list(color=True, run_output=True, keywords_list=[]):
     """
     Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
     :return: The formatted RIPE list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     ripe_list = []
@@ -186,7 +189,7 @@ def get_ripe_list(color=True, run_output=True):
     if run_output:
         sys.stdout.write("\n")
 
-    for _word in KEYWORDS_LIST:
+    for _word in keywords_list:
         if run_output:
             sys.stdout.write("[get_ripe_list] Requesting RIPE for '%s'... " % _word)
 
@@ -222,7 +225,7 @@ def get_ripe_list(color=True, run_output=True):
             working_list = working_list[2:]
             for line in working_list:
                 # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in KEYWORDS_LIST):
+                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in keywords_list):
                     #  format entries
                     name, ip_range = line.split(IBL_SEP)
                     # TODO format as cidr
@@ -248,36 +251,40 @@ def get_ripe_list(color=True, run_output=True):
     return ripe_list
 
 
-def get_lists(color=True, run_output=True, ibl=True, ripe=True):
+def get_lists(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     """
     Give a global list generated from the different sources specified in arguments.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
+    :param ibl_lists: The iBlockList list to parse.
     :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     list = []
     if ibl:
-        list.extend(get_ibl_list(color, run_output))
+        list.extend(get_ibl_list(color, run_output, keywords_list, ibl_lists))
         if run_output:
             sys.stdout.write("[get_list] List from iBlockList generated\n")
     if ripe:
-        list.extend(get_ripe_list(color, run_output))
+        list.extend(get_ripe_list(color, run_output, keywords_list))
         if run_output:
             sys.stdout.write("[get_list] List from the RIPE generated\n")
     return list
 
 
-def cmd_list(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_list(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     """
     Run the 'list' command. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
+    :param ibl_lists: The iBlockList list to parse.
     """
-    full_list = get_lists(color, run_output, ibl, ripe)
+    full_list = get_lists(color, run_output, ibl, ripe, keywords_list, ibl_lists)
     if run_output:
         sys.stdout.write("[cmd_list] Printing the list...\n\n")
     for (name, cidr_ip_range) in full_list:
@@ -285,13 +292,15 @@ def cmd_list(color=True, run_output=True, ibl=True, ripe=True):
 
 
 # TODO Iptable commands to be finished + list mode to manage
-def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     """
     Run the 'iptables' command.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
+    :param ibl_lists: The iBlockList list to parse.
     """
     full_list = get_lists(color, run_output, ibl, ripe)
     # TODO generate iptables
@@ -299,28 +308,30 @@ def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True):
 
 
 # TODO To be implemented
-def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
 
-def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     """
     Run the 'utm9' command.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param keywords_list: The keywords list to search for gremlins.
+    :param ibl_lists: The iBlockList list to parse.
     """
     pass
 
 
 # TODO To be implemented
-def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
 
 # TODO To be implemented
-def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True):
+def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
 
@@ -581,32 +592,38 @@ def main():
                 if args.showListHelp:
                     sys.stdout.write(HELP_LIST % (BASENAME_PROG, CMD_LIST))
                 else:
-                    cmd_list(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_list(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                             IBL_LISTS)
             elif args.cmd == CMD_IPTABLES:
                 if args.showIptablesHelp:
                     sys.stdout.write(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
-                    cmd_iptables(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_iptables(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                                 IBL_LISTS)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
                     sys.stdout.write(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
-                    cmd_fbxos(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_fbxos(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                              IBL_LISTS)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
                     sys.stdout.write(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
-                    cmd_utm9(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_utm9(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                             IBL_LISTS)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
                     sys.stdout.write(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
-                    cmd_pfsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_pfsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                                IBL_LISTS)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
                     sys.stdout.write(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
-                    cmd_opnsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE)
+                    cmd_opnsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
+                                 IBL_LISTS)
             else:
                 sys.stdout.write(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
