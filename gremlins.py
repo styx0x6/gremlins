@@ -205,35 +205,21 @@ def get_ripe_list(color=True, run_output=True, keywords_list=[]):
             if r.headers.get('content-type') == 'application/json':
                 if run_output:
                     sys.stdout.write("[get_ripe_list] Parsing the JSON response... ")
-                # TODO TODOTODOTODOTODOTODO
+                # TODO Parse the response
                 """
                 dict_parsed_json = r.json()
                 if dict_parsed_json !=
                 print(dict_parsed_json['objects'].)
                 """
+                """
                 if run_output:
                     sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
+                """
+                sys.stdout.write("[get_ripe_list] TO BE IMPLEMENTED\n")
             # case below should never occurs
             else:
                 # TODO raise Unexpected format received
                 pass
-
-            # Parse for concerned lines
-            if run_output:
-                sys.stdout.write("[get_ripe_list] Parse '%s' from iBlockList... " % _list)
-            # remove the 2 first header lines from the blocking list
-            working_list = working_list[2:]
-            for line in working_list:
-                # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in keywords_list):
-                    #  format entries
-                    name, ip_range = line.split(IBL_SEP)
-                    # TODO format as cidr
-                    #  clean duplicate entries
-                    if (name, ip_range) not in ripe_list:
-                        ripe_list.extend([(name, ip_range)])
-            if run_output:
-                sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
         else:
             # TODO raise not 200 OK response after sys.stdout
             if run_output:
@@ -291,34 +277,52 @@ def cmd_list(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[],
         sys.stdout.write(name + "," + cidr_ip_range + "\n")
 
 
-# TODO Iptable commands to be finished + list mode to manage
-def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+# TODO Iptable commands to be finished + Doc + Help
+def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True, showListOnly=False, host=None, port=DEFAULT_SSH_PORT,
+                 user=None, password=None, save=True, keywords_list=[], ibl_lists=[]):
     """
     Run the 'iptables' command.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param showListOnly:
+    :param host:
+    :param port:
+    :param user:
+    :param password:
+    :param save:
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
+    shell_commands_list = []
+
     full_list = get_lists(color, run_output, ibl, ripe)
-    # TODO generate iptables
+    # TODO generate iptables shell commands
     sys.stdout.write("[cmd_iptables] IPTABLES COMMAND TO BE DONE\n")
 
 
 # TODO To be implemented
+# TODO Args to review
 def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
 
-def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+# TODO UTM9 to be finished + Doc + Help
+def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None,
+             user=None, password=None, log=True, keywords_list=[], ibl_lists=[]):
     """
     Run the 'utm9' command.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
+    :param host:
+    :param port:
+    :param token:
+    :param user:
+    :param password:
+    :param log:
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
@@ -326,11 +330,13 @@ def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[],
 
 
 # TODO To be implemented
+# TODO Args to review
 def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
 
 # TODO To be implemented
+# TODO Args to review
 def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
     pass
 
@@ -466,7 +472,7 @@ def init_args(dest='cmd', add_help=False):
                              default=False
                              )
     parser_utm9.add_argument('-H', '--host',
-                             dest='user',
+                             dest='host',
                              action='store',
                              default=None
                              )
@@ -504,7 +510,7 @@ def init_args(dest='cmd', add_help=False):
                                 default=False
                                 )
     parser_pfsense.add_argument('-H', '--host',
-                                dest='user',
+                                dest='host',
                                 action='store',
                                 default=None
                                 )
@@ -537,7 +543,7 @@ def init_args(dest='cmd', add_help=False):
                                  default=False
                                  )
     parser_opnsense.add_argument('-H', '--host',
-                                 dest='user',
+                                 dest='host',
                                  action='store',
                                  default=None
                                  )
@@ -598,30 +604,34 @@ def main():
                 if args.showIptablesHelp:
                     sys.stdout.write(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
-                    cmd_iptables(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                                 IBL_LISTS)
+                    cmd_iptables(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE,
+                                 args.showListOnly, args.host, args.port, args.user, args.password, args.save,
+                                 KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
                     sys.stdout.write(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
+                    # TODO Args to review
                     cmd_fbxos(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
                               IBL_LISTS)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
                     sys.stdout.write(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
-                    cmd_utm9(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                             IBL_LISTS)
+                    cmd_utm9(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, args.host,
+                             args.port, args.token, args.user, args.password, args.log, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
                     sys.stdout.write(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
+                    # TODO Args to review
                     cmd_pfsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
                                 IBL_LISTS)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
                     sys.stdout.write(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
+                    # TODO Args to review
                     cmd_opnsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
                                  IBL_LISTS)
             else:
