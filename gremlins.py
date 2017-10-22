@@ -99,12 +99,10 @@ def format_entry(name=None):
 
 
 def get_ibl_list(color=True, run_output=True):
-    # TODO doc
     """
     Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
-
     :param color: Colorized stdout. True by default.
-    :param run_output: Running output in stdout. True by default.
+    :param run_output: Show running output in stdout. True by default.
     :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     ibl_list = []
@@ -114,7 +112,7 @@ def get_ibl_list(color=True, run_output=True):
 
     for _list in IBL_LISTS:
         if run_output:
-            sys.stdout.write("Get list '%s' from iBlockList... " % _list)
+            sys.stdout.write("[get_ibl_list] Get list '%s' from iBlockList... " % _list)
         r = requests.get(IBL_HTTP_URL % _list)
         # Check HTTP response code
         if r.status_code == requests.codes.ok:
@@ -127,14 +125,14 @@ def get_ibl_list(color=True, run_output=True):
             working_list = []
             if r.headers.get('content-type') == 'application/x-gzip':
                 if run_output:
-                    sys.stdout.write("Decompress and decode file... ")
+                    sys.stdout.write("[get_ibl_list] Decompress and decode file... ")
                 working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
                 if run_output:
                     sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
             # case below should never occurs
             elif r.headers.get('content-type') == 'gzip':
                 if run_output:
-                    sys.stdout.write("Decode file... ")
+                    sys.stdout.write("[get_ibl_list] Decode file... ")
                 working_list = r.content.decode(encoding=IBL_LIST_ENC).split("\n")
                 if run_output:
                     sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
@@ -144,7 +142,7 @@ def get_ibl_list(color=True, run_output=True):
 
             # Parse for concerned lines
             if run_output:
-                sys.stdout.write("Parse '%s' from iBlockList... " % _list)
+                sys.stdout.write("[get_ibl_list] Parse '%s' from iBlockList... " % _list)
             # remove the 2 first header lines from the blocking list
             working_list = working_list[2:]
             for line in working_list:
@@ -166,14 +164,13 @@ def get_ibl_list(color=True, run_output=True):
     return ibl_list
 
 
+# TODO RIPE list to finish
 def get_ripe_list(color=True, run_output=True):
-    # TODO doc
     """
-    Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
-
+    Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
     :param color: Colorized stdout. True by default.
-    :param run_output: Running output in stdout. True by default.
-    :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
+    :param run_output: Show running output in stdout. True by default.
+    :return: The formatted RIPE list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     ripe_list = []
 
@@ -182,7 +179,7 @@ def get_ripe_list(color=True, run_output=True):
 
     for _word in KEYWORDS_LIST:
         if run_output:
-            sys.stdout.write("Requesting RIPE for '%s'... " % _word)
+            sys.stdout.write("[get_ripe_list] Requesting RIPE for '%s'... " % _word)
 
         r = requests.get(RIPE_HTTP_REST_URL % _word)
 
@@ -195,7 +192,7 @@ def get_ripe_list(color=True, run_output=True):
             working_list = []
             if r.headers.get('content-type') == 'application/json':
                 if run_output:
-                    sys.stdout.write("Parsing the JSON response... ")
+                    sys.stdout.write("[get_ripe_list] Parsing the JSON response... ")
                 # TODO TODOTODOTODOTODOTODO
                 """
                 dict_parsed_json = r.json()
@@ -211,7 +208,7 @@ def get_ripe_list(color=True, run_output=True):
 
             # Parse for concerned lines
             if run_output:
-                sys.stdout.write("Parse '%s' from iBlockList... " % _list)
+                sys.stdout.write("[get_ripe_list] Parse '%s' from iBlockList... " % _list)
             # remove the 2 first header lines from the blocking list
             working_list = working_list[2:]
             for line in working_list:
@@ -244,50 +241,51 @@ def get_ripe_list(color=True, run_output=True):
 
 def get_list(color=True, run_output=True, ibl=True, ripe=True):
     """
-
-    :param color:
-    :param run_output:
-    :param ibl:
-    :param ripe:
-    :return:
+    Give a global list generated from the different sources specified in arguments.
+    :param color: Colorized stdout. True by default.
+    :param run_output: Show running output in stdout. True by default.
+    :param ibl: Should use iBlockList as information source. True by default.
+    :param ripe: Should use the RIPE as information source. True by default.
+    :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     li = []
     if ibl:
         li.extend(get_ibl_list(color, run_output))
-        # TODO print
-        """
         if run_output:
-            sys.stdout.write("List from iBlockList generated\n"")
-        """
+            sys.stdout.write("[get_list] List from iBlockList generated\n")
     if ripe:
         li.extend(get_ripe_list(color, run_output))
+        if run_output:
+            sys.stdout.write("[get_list] List from the RIPE generated\n")
     return li
 
 
+# TODO Printing to be finished
 def cmd_list(color=True, run_output=True, ibl=True, ripe=True):
     """
-
-    :param color:
-    :param run_output:
-    :param ibl:
-    :param ripe:
-    :return:
+    Run the 'list' command.
+    :param color: Colorized stdout. True by default.
+    :param run_output: Show running output in stdout. True by default.
+    :param ibl: Should use iBlockList as information source. True by default.
+    :param ripe: Should use the RIPE as information source. True by default.
     """
     full_list = get_list(color, run_output, ibl, ripe)
     # TODO print it properly
+    sys.stdout.write("[cmd_list] LIST PRINTING TO BE DONE\n")
 
 
+# TODO Iptable commands to be finished + list mode to manage
 def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True):
     """
-
-    :param color:
-    :param run_output:
-    :param ibl:
-    :param ripe:
-    :return:
+    Run the 'iptables' command.
+    :param color: Colorized stdout. True by default.
+    :param run_output: Show running output in stdout. True by default.
+    :param ibl: Should use iBlockList as information source. True by default.
+    :param ripe: Should use the RIPE as information source. True by default.
     """
     full_list = get_list(color, run_output, ibl, ripe)
     # TODO generate iptables
+    sys.stdout.write("[cmd_iptables] IPTABLES COMMAND TO BE DONE\n")
 
 
 # TODO To be implemented
@@ -297,12 +295,11 @@ def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True):
 
 def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True):
     """
-
-    :param color:
-    :param run_output:
-    :param ibl:
-    :param ripe:
-    :return:
+    Run the 'utm9' command.
+    :param color: Colorized stdout. True by default.
+    :param run_output: Show running output in stdout. True by default.
+    :param ibl: Should use iBlockList as information source. True by default.
+    :param ripe: Should use the RIPE as information source. True by default.
     """
     pass
 

@@ -66,10 +66,10 @@ Commands:
 
   list                          Show the CIDR IP addresses list
   iptables                      Push iptables blocking ruleset
-  fbxos                         Push FreeboxOS Download Blacklist blocking ruleset (Freebox Revolution v3)
+  fbxos (TBI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+)
   utm9                          Push Sophos UTM 9 Firewall blocking ruleset (v9.408+)
-  pfsense                       Push NetGate pfSense firewall blocking ruleset
-  opnsense                      Push Deciso OPNsense Firewall blocking ruleset
+  pfsense (TBI)                 Push NetGate pfSense firewall blocking ruleset
+  opnsense (TBI)                Push Deciso OPNsense Firewall blocking ruleset
 
   For further details about commands, use: %s <command> -h
 """
