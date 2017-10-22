@@ -64,7 +64,7 @@ Options:
 
 Commands:
 
-  list                          Show the CIDR IP addresses list
+  list                          Show the CIDR IP addresses list.
   iptables                      Push iptables blocking ruleset
   fbxos (TBI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+)
   utm9                          Push Sophos UTM 9 Firewall blocking ruleset (v9.408+)
@@ -74,12 +74,14 @@ Commands:
   For further details about commands, use: %s <command> -h
 """
 
-# TODO Detail args and add long args
-# TODO Detail output format
 HELP_LIST = """
 Usage: %s %s [-h]
 
-Show the CIDR IP addresses list
+Show the CIDR IP addresses list. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
+
+Options:
+
+  -h, --help                    Show this help message
 """
 
 # TODO Detail args and add long args

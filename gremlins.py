@@ -104,6 +104,7 @@ def iprange_to_cidr(ip_range=None):
     return cidr_ip_range_list
 
 
+# TODO Put MACROS as arguments
 def get_ibl_list(color=True, run_output=True):
     """
     Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
@@ -172,6 +173,7 @@ def get_ibl_list(color=True, run_output=True):
 
 
 # TODO RIPE list to finish
+# TODO Put MACROS as arguments
 def get_ripe_list(color=True, run_output=True):
     """
     Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
@@ -246,7 +248,7 @@ def get_ripe_list(color=True, run_output=True):
     return ripe_list
 
 
-def get_list(color=True, run_output=True, ibl=True, ripe=True):
+def get_lists(color=True, run_output=True, ibl=True, ripe=True):
     """
     Give a global list generated from the different sources specified in arguments.
     :param color: Colorized stdout. True by default.
@@ -269,13 +271,13 @@ def get_list(color=True, run_output=True, ibl=True, ripe=True):
 
 def cmd_list(color=True, run_output=True, ibl=True, ripe=True):
     """
-    Run the 'list' command. Print each line to a CSV format "<NAME>,<CIDR_IP_RANGE>".
+    Run the 'list' command. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     """
-    full_list = get_list(color, run_output, ibl, ripe)
+    full_list = get_lists(color, run_output, ibl, ripe)
     if run_output:
         sys.stdout.write("[cmd_list] Printing the list...\n\n")
     for (name, cidr_ip_range) in full_list:
@@ -291,7 +293,7 @@ def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True):
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     """
-    full_list = get_list(color, run_output, ibl, ripe)
+    full_list = get_lists(color, run_output, ibl, ripe)
     # TODO generate iptables
     sys.stdout.write("[cmd_iptables] IPTABLES COMMAND TO BE DONE\n")
 
