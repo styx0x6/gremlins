@@ -83,9 +83,10 @@ KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "tr
                  "trident media guard"]
 
 
-def iprange_to_cidr(ip_range=None):
+def iprange_to_cidr(ip_range: str = None) -> [str]:
     """
-    Format an IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y') to its corresponding CIDR list.
+    Format an IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y')
+    to its corresponding CIDR list.
     :param ip_range: IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y').
     :return: IP range addresses string as its corresponding CIDR string list.
     """
@@ -106,7 +107,8 @@ def iprange_to_cidr(ip_range=None):
     return cidr_ip_range_list
 
 
-def get_ibl_list(color=True, run_output=True, keywords_list=[], ibl_lists=[]):
+def get_ibl_list(color: bool = True, run_output: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> \
+        [(str, str)]:
     """
     Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
     :param color: Colorized stdout. True by default.
@@ -176,7 +178,7 @@ def get_ibl_list(color=True, run_output=True, keywords_list=[], ibl_lists=[]):
 
 
 # TODO RIPE list to finish
-def get_ripe_list(color=True, run_output=True, keywords_list=[]):
+def get_ripe_list(color: bool = True, run_output: bool = True, keywords_list: [str] = None) -> [(str, str)]:
     """
     Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
     :param color: Colorized stdout. True by default.
@@ -237,7 +239,8 @@ def get_ripe_list(color=True, run_output=True, keywords_list=[]):
     return ripe_list
 
 
-def get_lists(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+def get_lists(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
+              keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str, str)]:
     """
     Give a global list generated from the different sources specified in arguments.
     :param color: Colorized stdout. True by default.
@@ -248,19 +251,20 @@ def get_lists(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[]
     :param ibl_lists: The iBlockList list to parse.
     :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
-    list = []
+    lists = []
     if ibl:
-        list.extend(get_ibl_list(color, run_output, keywords_list, ibl_lists))
+        lists.extend(get_ibl_list(color, run_output, keywords_list, ibl_lists))
         if run_output:
             sys.stdout.write("[get_list] List from iBlockList generated\n")
     if ripe:
-        list.extend(get_ripe_list(color, run_output, keywords_list))
+        lists.extend(get_ripe_list(color, run_output, keywords_list))
         if run_output:
             sys.stdout.write("[get_list] List from the RIPE generated\n")
-    return list
+    return lists
 
 
-def cmd_list(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+def cmd_list(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
+             keywords_list: [str] = None, ibl_lists: [str] = None):
     """
     Run the 'list' command. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
     :param color: Colorized stdout. True by default.
@@ -278,15 +282,17 @@ def cmd_list(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[],
 
 
 # TODO Iptable commands to be finished + Doc + Help
-def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True, showListOnly=False, host=None, port=DEFAULT_SSH_PORT,
-                 user=None, password=None, save=True, keywords_list=[], ibl_lists=[]):
+def cmd_iptables(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
+                 show_list_only: bool = False, host: str = None, port: int = DEFAULT_SSH_PORT,
+                 user: str = None, password: str = None, save: bool = True, keywords_list: [str] = None,
+                 ibl_lists: [str] = None):
     """
     Run the 'iptables' command.
     :param color: Colorized stdout. True by default.
     :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
-    :param showListOnly:
+    :param show_list_only:
     :param host:
     :param port:
     :param user:
@@ -304,13 +310,13 @@ def cmd_iptables(color=True, run_output=True, ibl=True, ripe=True, showListOnly=
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     pass
 
 
 # TODO UTM9 to be finished + Doc + Help
 def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None,
-             user=None, password=None, log=True, keywords_list=[], ibl_lists=[]):
+             user=None, password=None, log=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     """
     Run the 'utm9' command.
     :param color: Colorized stdout. True by default.
@@ -331,17 +337,18 @@ def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, host=None, port=D
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     pass
 
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list=[], ibl_lists=[]):
+def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None,
+                 ibl_lists: [str] = None):
     pass
 
 
-def init_args(dest='cmd', add_help=False):
+def init_args(dest: str = 'cmd', add_help: bool = False):
     """
     Initialize and parse arguments. Arguments helps are set in settings.
     :param dest: variable name to store the choosen command. 'cmd' by default.

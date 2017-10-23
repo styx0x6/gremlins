@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# TODO link information details to those into __init__.py
+# TODO link information details to those into __init__.py?
 PROJECT_NAME = "Gremlins"
 PROJECT_TITLE = "gremlins"
 DESCRIPTION = "Protect your privacy, protect from gremlins!"
