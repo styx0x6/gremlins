@@ -59,6 +59,26 @@ DEFAULT_OPNSENSE_HTTPS_PORT = '443'
 
 # TODO Needed: CACHE_DIR = "cache"
 
+# iBlockList static settings
+IBL_HTTP_FILEFORMAT = 'p2p'
+IBL_HTTP_ARCHIVEFORMAT = 'gz'
+IBL_HTTP_URL = "http://list.iblocklist.com/index.php?list=%s&fileformat=%s&archiveformat=%s" \
+               % ("%s", IBL_HTTP_FILEFORMAT, IBL_HTTP_ARCHIVEFORMAT)
+IBL_LIST_ENC = 'utf-8'
+IBL_SEP = ":"
+
+# RIPE static settings
+RIPE_HTTP_RESP_TYPE = 'json'
+RIPE_HTTP_REST_URL = "https://rest.db.ripe.net/search.%s?query-string=%s&flags=no-filtering" \
+                     % (RIPE_HTTP_RESP_TYPE, "%s")
+RIPE_JSON_NAME_LIST = ['netname', 'descr']
+RIPE_JSON_INETNUM = 'inetnum'
+
+# Information gathering settings
+IBL_LISTS = ['bt_level1', 'bt_level2']
+KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "trident medi guard",
+                 "trident media guard"]
+
 """
 Gremlins outputs settings
 """
@@ -73,6 +93,8 @@ STR_OK = "OK!"
 STR_NOK = "NOK"
 STR_ERR = "[ERR]"
 STR_DEBUG = "[%s] "  # debug information shall be provided here
+
+
 
 # Default parameters for outputs
 DEFAULT_COLORIZE_OUTPUT = True  # by default, output is colorized
@@ -89,6 +111,7 @@ BANNER = """
 Home page: %s
 Report bugs at: %s
 Author: %s, License: %s
+
 """ % ("%s", "%s", "%s", VERSION, "%s", DESCRIPTION_2, HOME_PAGE, ISSUES_PAGE, AUTHOR, LICENSE_SHORT)
 
 """
@@ -105,6 +128,7 @@ Options:
 
   -c, --clean-output            Do not show running output, keep only some commands results
   -Dc, --disable-coloring       Disable terminal coloring
+  -De, --disable-error          Disable error messages
 
   -Dr, --disable-ripe           Disable RIPE database searching requests
   -Di, --disable-iblocklist     Disable iBlockList download requests

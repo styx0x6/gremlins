@@ -19,6 +19,7 @@
 
 import os
 import sys
+import inspect
 import argparse
 import gzip
 import unicodedata
@@ -29,6 +30,9 @@ from static.settings import PROJECT_NAME, VERSION_STRING, VALID_PYTHON_VERSION, 
     CMD_LIST, CMD_IPTABLES, CMD_FBXOS, CMD_UTM9, CMD_PFSENSE, CMD_OPNSENSE, \
     DEFAULT_SSH_PORT, DEFAULT_FBX_HTTP_PORT, DEFAULT_UTM9_HTTPS_PORT, \
     DEFAULT_PFSENSE_HTTPS_PORT, DEFAULT_OPNSENSE_HTTPS_PORT, \
+    IBL_HTTP_URL, IBL_LIST_ENC, IBL_SEP, \
+    RIPE_HTTP_REST_URL, RIPE_JSON_NAME_LIST, RIPE_JSON_INETNUM, \
+    IBL_LISTS, KEYWORDS_LIST, \
     STDOUT, STDERR, OK, NOK, STR_OK, STR_NOK, STR_ERR, STR_DEBUG, \
     DEFAULT_COLORIZE_OUTPUT, DEFAULT_SHOW_RUNNING_OUTPUT, DEFAULT_SHOW_DEBUG_INFO, DEFAULT_SHOW_RUNNING_ERROR, \
     BANNER, \
@@ -60,26 +64,6 @@ gvar_show_running_output = DEFAULT_SHOW_RUNNING_OUTPUT
 gvar_show_debug_info = DEFAULT_SHOW_DEBUG_INFO
 gvar_show_running_error = DEFAULT_SHOW_RUNNING_ERROR
 
-# iBlockList static settings
-IBL_HTTP_FILEFORMAT = 'p2p'
-IBL_HTTP_ARCHIVEFORMAT = 'gz'
-IBL_HTTP_URL = "http://list.iblocklist.com/index.php?list=%s&fileformat=%s&archiveformat=%s" \
-               % ("%s", IBL_HTTP_FILEFORMAT, IBL_HTTP_ARCHIVEFORMAT)
-IBL_LIST_ENC = 'utf-8'
-IBL_SEP = ":"
-
-# RIPE static settings
-RIPE_HTTP_RESP_TYPE = 'json'
-RIPE_HTTP_REST_URL = "https://rest.db.ripe.net/search.%s?query-string=%s&flags=no-filtering" \
-                     % (RIPE_HTTP_RESP_TYPE, "%s")
-RIPE_JSON_NAME_LIST = ['netname', 'descr']
-RIPE_JSON_INETNUM = 'inetnum'
-
-# Information gathering settings
-IBL_LISTS = ['bt_level1', 'bt_level2']
-KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "trident medi guard",
-                 "trident media guard"]
-
 
 def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: bool = False):
     """
@@ -88,8 +72,8 @@ def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: b
     :param message: The string to write.
     :param std: STDOUT to write in stdout, STDERR to write in stderr.
     :param debug_info: Debugging information that will be shown as prefix. This information is always shown within an
-    error mes# Import static settings variablessage. Usually the function name that writen the message for standard outputs.
-    :param is_raw_data: Tell if 'message' is considered as raw data. Raw data are written in STDOUT only even if
+    error messsage. Usually the function name that writen the message for standard outputs.
+    :param is_raw_data: Is 'message' considered as raw data. Raw data is only written in STDOUT even if
     gvar_show_running_output variable is set to False or std is set to another output.
     """
     debug_prefix = (STR_DEBUG % debug_info) if ((gvar_show_debug_info or std is STDERR) and debug_info is not "") \
@@ -106,6 +90,19 @@ def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: b
             sys.stderr.write("\n" + err_prefix + message)
         else:
             pass
+
+
+def write_debug(message: str, std: int = STDOUT, debug_info: str = ""):
+    """
+    Write message into stdout or stderr in a standardized way in debug mode. The end of line "\n" char is not
+    automatically handled.
+    :param message: The string to write only in debug mode.
+    :param std: STDOUT to write in stdout, STDERR to write in stderr.
+    :param debug_info: Debugging information that will be shown as prefix. This information is always shown within an
+    error messsage. Usually the function name that writen the message for standard outputs.
+    """
+    if gvar_show_debug_info:
+        write_(message, std, debug_info)
 
 
 def write_result(result: bool, suffix: str = ""):
@@ -135,6 +132,7 @@ def iprange_to_cidr(ip_range: str = None) -> [str]:
     """
     cidr_ip_range_list = []
     ip_start, ip_end = ip_range.split("-")
+
     try:
         cidr_ip_range_list.extend(net.with_prefixlen for net in
                                   ipaddress.summarize_address_range(ipaddress.IPv4Address(ip_start),
@@ -157,12 +155,13 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
     :param ibl_lists: The iBlockList list to parse.
     :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+
     ibl_list = []
 
-    write_("\n")
-
     for _list in ibl_lists:
-        write_("Get list '%s' from iBlockList... " % _list, STDOUT, "get_ibl_list")
+        write_("Getting list '%s' from iBlockList... " % _list, STDOUT, _f_name)
         r = requests.get(IBL_HTTP_URL % _list)
         # Check HTTP response code
         if r.status_code == requests.codes.ok:
@@ -172,23 +171,23 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
             # Decompress, decode as UTF-8 string, and split based on the end of line
             working_list = []
             if r.headers.get('content-type') == 'application/x-gzip':
-                write_("Decompress and decode file...           ", STDOUT, "get_ibl_list")
+                write_("Decompressing and decoding the file...      ", STDOUT, _f_name)
                 working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
                 write_result(OK, "\n")
             # case below should never occurs
             elif r.headers.get('content-type') == 'gzip':
-                write_("Decode file...                   ", STDOUT, "get_ibl_list")
+                write_("Decoding file...                     ", STDOUT, _f_name)
                 working_list = r.content.decode(encoding=IBL_LIST_ENC).split("\n")
                 write_result(OK, "\n")
             # if unexpected format is downloaded
             else:
                 # TODO Fullfil the message details
-                write_("Unexpected file format downloaded (%s) when getting list %s\n" % ("<DATA>", "<DATA>"),
-                       STDERR, "get_ibl_list")
+                write_("Unexpected file format downloaded (%s) when getting list %s\n" % ("<DATA>", "<DATA>"), STDERR,
+                       _f_name)
                 continue
 
             # Parse for concerned lines
-            write_("Parse '%s' from iBlockList...    " % _list, STDOUT, "get_ibl_list")
+            write_("Parsing '%s' from iBlockList...      " % _list, STDOUT, _f_name)
             # remove the two first header lines from the blocking list
             working_list = working_list[2:]
             for _line in working_list:
@@ -201,16 +200,16 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
                         _cidr_ip_range_list = iprange_to_cidr(_ipr)
                     except ipaddress.AddressValueError as ave:
                         write_("AddressValueError raised when trying to format IP range: %s\n" % str(ave), STDERR,
-                               "get_ibl_list")
+                               _f_name)
                     except ipaddress.NetmaskValueError as nve:
                         write_("NetmaskValueError raised when trying to format IP range: %s\n" % str(nve), STDERR,
-                               "get_ibl_list")
+                               _f_name)
                     except ValueError as ve:
                         write_("ValueError raised when trying to format IP range: %s\n" % str(ve), STDERR,
-                               "get_ibl_list")
+                               _f_name)
                     except TypeError as te:
                         write_("TypeError raised when trying to format IP range: %s\n" % str(te), STDERR,
-                               "get_ibl_list")
+                               _f_name)
                     for _cidr_ip_range in _cidr_ip_range_list:
                         #  clean duplicate entries
                         if (_name, _cidr_ip_range) not in ibl_list:
@@ -229,6 +228,9 @@ def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
     :param keywords_list: The keywords list to search for gremlins.
     :return: The formatted RIPE list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+
     ripe_list = []
 
     if run_output:
@@ -282,7 +284,7 @@ def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
     return ripe_list
 
 
-def get_lists(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> [
+def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> [
     (str, str)]:
     """
     Give a global list generated from the different sources specified in arguments.
@@ -292,14 +294,17 @@ def get_lists(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, 
     :param ibl_lists: The iBlockList list to parse.
     :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+
     lists = []
 
     if ibl:
         lists.extend(get_ibl_list(keywords_list, ibl_lists))
-        write_("List from iBlockList generated\n", STDOUT, "get_lists")
+        write_("List from iBlockList generated\n", STDOUT, _f_name)
     if ripe:
         lists.extend(get_ripe_list(keywords_list))
-        write_("List from the RIPE generated\n", STDOUT, "get_lists")
+        write_("List from the RIPE generated\n", STDOUT, _f_name)
 
     return lists
 
@@ -312,9 +317,12 @@ def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, i
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
-    full_list = get_lists(ibl, ripe, keywords_list, ibl_lists)
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
-    write_("Printing the list...\n\n", STDOUT, "cmd_list")
+    full_list = get_full_list(ibl, ripe, keywords_list, ibl_lists)
+
+    write_("Printing the full list...\n\n", STDOUT, _f_name)
     for (name, cidr_ip_range) in full_list:
         write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
 
@@ -336,16 +344,21 @@ def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = Fal
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+
     shell_commands_list = []
-    full_list = get_lists(ibl, ripe)
+    full_list = get_full_list(ibl, ripe)
 
     # TODO generate iptables shell commands
-    write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, "cmd_iptables")
+    write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)
 
 
 # TODO To be implemented
 # TODO Args to review
 def cmd_fbxos(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
@@ -365,27 +378,33 @@ def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
 # TODO To be implemented
 # TODO Args to review
 def cmd_pfsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
 # TODO To be implemented
 # TODO Args to review
 def cmd_opnsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
 def init_args(dest: str = 'cmd', add_help: bool = False):
     """
     Initialize and parse arguments. Arguments helps are set in settings.
-    :param dest: variable name to store the choosen command. 'cmd' by default.
-    :param add_help: choose if the parsers have to add help options and associated texts, False by default because they are manually handled.
-    :return: the main parser.
+    :param dest: Variable name to store the choosen command. 'cmd' by default.
+    :param add_help: Choose if the parsers have to add help options and associated texts, False by default because they are manually handled.
+    :return: The arguments parser.
     """
     parser = argparse.ArgumentParser(add_help=add_help)
     subparsers = parser.add_subparsers(dest=dest)
@@ -621,6 +640,9 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
 
 
 def main():
+    # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
+    _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+
     # Load the global variables as writable by the main function
     global gvar_colorize_output, gvar_show_running_output, gvar_show_debug_info, gvar_show_running_error
 
@@ -635,13 +657,16 @@ def main():
         gvar_show_debug_info = args.debugMode
         gvar_show_running_error = args.showRunningError
 
+        write_debug("Started running: initialized arguments and set global variables\n", STDOUT, _f_name)
+
         # Make ANSI escapes work with MS Windows
         if gvar_colorize_output and OS_IS_WIN:
             colorama.init()
+            write_debug("Initialized colorama for Windows OS\n", STDOUT, _f_name)
 
         # Output standard information
         if args.showVersion:
-            write_(VERSION_STRING, STDOUT, "main")
+            write_(VERSION_STRING, STDOUT, _f_name)
         else:
             if args.showRunningOutpout:
                 write_(BANNER % ((colorama.Style.BRIGHT + colorama.Fore.GREEN,
@@ -656,49 +681,54 @@ def main():
                 if args.showListHelp:
                     write_(HELP_LIST % (BASENAME_PROG, CMD_LIST))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_LIST, STDOUT, _f_name)
                     cmd_list(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_IPTABLES:
                 if args.showIptablesHelp:
                     write_(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_IPTABLES, STDOUT, _f_name)
                     cmd_iptables(args.queryiBlockList, args.queryRIPE, args.showListOnly, args.host, args.port,
                                  args.user, args.password, args.save, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
                     write_(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_FBXOS, STDOUT, _f_name)
                     # TODO Args to review
                     cmd_fbxos(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
                     write_(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_UTM9, STDOUT, _f_name)
                     cmd_utm9(args.queryiBlockList, args.queryRIPE, args.host, args.port, args.token, args.user,
                              args.password, args.log, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
                     write_(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_PFSENSE, STDOUT, _f_name)
                     # TODO Args to review
                     cmd_pfsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
                     write_(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
+                    write_debug("Started executing the cmd: %s\n" % CMD_OPNSENSE, STDOUT, _f_name)
                     # TODO Args to review
                     cmd_opnsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             else:
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
-        write_("KeyboardInterrupt stopped the execution. Exiting the program...\n", STDERR, "main")
+        write_("KeyboardInterrupt stopped the execution. Exiting the program...\n", STDERR, _f_name)
         exit(ERROR_CODE_EXCEPTION)
     except requests.RequestException as re:
-        write_("Unhandled RequestException from the 'requests' library has been raised: %s. Exiting the program...\n"
-               % str(re), STDERR, "main")
+        write_("Unhandled RequestException from the 'requests' library: %s. Exiting the program...\n"
+               % str(re), STDERR, _f_name)
         exit(ERROR_CODE_EXCEPTION)
     except Exception as e:
-        write_("Unhandled exception (Type: %s) has been raised: %s. Exiting the program...\n" % (str(type(e)), str(e)),
-               STDERR, "main")
+        write_("Unhandled exception (Type: %s): %s. Exiting the program...\n" % (str(type(e)), str(e)), STDERR, _f_name)
         exit(ERROR_CODE_EXCEPTION)
     finally:
         # TODO Clear cache?
