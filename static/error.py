@@ -23,5 +23,5 @@ ERROR_CODE_VERSION = 1
 ERROR_CODE_EXCEPTION = 2
 
 """ %s: detected version, minimal required version, program name """
-ERROR_CRITICAL_VERSION = "[CRITICAL] Python %s detected. Please use at least Python %s for running %s\n" \
-                         "  => For further information, visit 'http://www.python.org/download/'"
+ERR_CRITICAL_VERSION = "[CRITICAL] Python %s detected. Please use at least Python %s for running %s\n" \
+                       "  => For further information, visit 'http://www.python.org/download/'"

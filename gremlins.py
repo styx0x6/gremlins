@@ -24,8 +24,19 @@ import gzip
 import unicodedata
 import ipaddress
 
-from static.settings import *
-from static import error
+# Import settings
+from static.settings import PROJECT_NAME, VERSION_STRING, VALID_PYTHON_VERSION, \
+    CMD_LIST, CMD_IPTABLES, CMD_FBXOS, CMD_UTM9, CMD_PFSENSE, CMD_OPNSENSE, \
+    DEFAULT_SSH_PORT, DEFAULT_FBX_HTTP_PORT, DEFAULT_UTM9_HTTPS_PORT, \
+    DEFAULT_PFSENSE_HTTPS_PORT, DEFAULT_OPNSENSE_HTTPS_PORT, \
+    STDOUT, STDERR, OK, NOK, STR_OK, STR_NOK, STR_ERR, STR_DEBUG, \
+    DEFAULT_COLORIZE_OUTPUT, DEFAULT_SHOW_RUNNING_OUTPUT, DEFAULT_SHOW_DEBUG_INFO, DEFAULT_SHOW_RUNNING_ERROR, \
+    BANNER, \
+    HELP, HELP_LIST, HELP_IPTABLES, HELP_FBXOS, HELP_UTM9, HELP_PFSENSE, HELP_OPNSENSE
+
+# Import error codes and messages
+from static.error import ERROR_CODE_NORMAL, ERROR_CODE_VERSION, ERROR_CODE_EXCEPTION, \
+    ERR_CRITICAL_VERSION
 
 from lib.thirdparty import colorama
 from lib.thirdparty import requests
@@ -34,33 +45,20 @@ PYTHON_VERSION = sys.version.split()[0]
 
 # Python version check
 if PYTHON_VERSION < VALID_PYTHON_VERSION:
-    # TODO raise RuntimeError('')?
-    sys.stderr.write(error.ERROR_CRITICAL_VERSION % (PYTHON_VERSION, VALID_PYTHON_VERSION, PROJECT_NAME))
-    sys.stderr.write("\n")
-    exit(error.ERROR_CODE_VERSION)
+    sys.stderr.write(ERR_CRITICAL_VERSION % (PYTHON_VERSION, VALID_PYTHON_VERSION, PROJECT_NAME) + "\n")
+    exit(ERROR_CODE_VERSION)
 
+# Running definition
 OS_IS_WIN = True if os.name is 'nt' else False
 OS_IS_POSIX = True if os.name is 'posix' else False
 BASENAME_PATH = os.path.basename(sys.argv[0])
 BASENAME_PROG = ("python " if OS_IS_WIN else "") + ("\"%s\"" % BASENAME_PATH if " " in BASENAME_PATH else BASENAME_PATH)
 
-# Gremlins static settings
-CMD_LIST = 'list'
-CMD_IPTABLES = 'iptables'
-CMD_FBXOS = 'fbxos'
-CMD_UTM9 = 'utm9'
-CMD_PFSENSE = 'pfsense'
-CMD_OPNSENSE = 'opnsense'
-
-OK = "OK!"
-NOK = "NOK"
-
-DEFAULT_SSH_PORT = '22'
-DEFAULT_FBX_HTTP_PORT = '80'
-DEFAULT_FBX_HTTPS_PORT = '48597'
-DEFAULT_UTM9_HTTPS_PORT = '4444'
-DEFAULT_PFSENSE_HTTPS_PORT = '443'
-DEFAULT_OPNSENSE_HTTPS_PORT = '443'
+# Running global variables set with their default values
+gvar_colorize_output = DEFAULT_COLORIZE_OUTPUT
+gvar_show_running_output = DEFAULT_SHOW_RUNNING_OUTPUT
+gvar_show_debug_info = DEFAULT_SHOW_DEBUG_INFO
+gvar_show_running_error = DEFAULT_SHOW_RUNNING_ERROR
 
 # iBlockList static settings
 IBL_HTTP_FILEFORMAT = 'p2p'
@@ -81,6 +79,51 @@ RIPE_JSON_INETNUM = 'inetnum'
 IBL_LISTS = ['bt_level1', 'bt_level2']
 KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "trident medi guard",
                  "trident media guard"]
+
+
+def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: bool = False):
+    """
+    Write message into stdout or stderr in a standardized way according to gvar_show_running_output,
+    gvar_show_debug_info and gvar_show_running_error variables. The end of line "\n" char is not automatically handled.
+    :param message: The string to write.
+    :param std: STDOUT to write in stdout, STDERR to write in stderr.
+    :param debug_info: Debugging information that will be shown as prefix. This information is always shown within an
+    error mes# Import static settings variablessage. Usually the function name that writen the message for standard outputs.
+    :param is_raw_data: Tell if 'message' is considered as raw data. Raw data are written in STDOUT only even if
+    gvar_show_running_output variable is set to False or std is set to another output.
+    """
+    debug_prefix = (STR_DEBUG % debug_info) if ((gvar_show_debug_info or std is STDERR) and debug_info is not "") \
+        else ""
+    err_prefix = ((colorama.Fore.RED + STR_ERR + colorama.Style.RESET_ALL) if gvar_colorize_output else STR_ERR) \
+        + debug_prefix
+
+    if is_raw_data:
+        sys.stdout.write(message)
+    else:
+        if std is STDOUT and gvar_show_running_output:
+            sys.stdout.write(debug_prefix + message)
+        elif std is STDERR and gvar_show_running_error:
+            sys.stderr.write("\n" + err_prefix + message)
+        else:
+            pass
+
+
+def write_result(result: bool, suffix: str = ""):
+    """
+    Write a simple OK or NOK result in STDOUT according to the global formatting variables. The end of line "\n" char
+    is not automatically handled.
+    :param result: OK to write STR_OK, NOK to write STR_NOK.
+    :param suffix: Append a string to the result. Empty string by default.
+    """
+    ok = (colorama.Fore.GREEN + STR_OK + colorama.Style.RESET_ALL) if gvar_colorize_output else STR_OK
+    nok = (colorama.Fore.RED + STR_NOK + colorama.Style.RESET_ALL) if gvar_colorize_output else STR_NOK
+
+    if result is OK:
+        write_(ok + suffix)
+    elif result is NOK:
+        write_(nok + suffix)
+    else:
+        pass
 
 
 def iprange_to_cidr(ip_range: str = None) -> [str]:
@@ -107,82 +150,82 @@ def iprange_to_cidr(ip_range: str = None) -> [str]:
     return cidr_ip_range_list
 
 
-def get_ibl_list(color: bool = True, run_output: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> \
-        [(str, str)]:
+def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str, str)]:
     """
     Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     ibl_list = []
 
-    if run_output:
-        sys.stdout.write("\n")
+    write_("\n")
 
     for _list in ibl_lists:
-        if run_output:
-            sys.stdout.write("[get_ibl_list] Get list '%s' from iBlockList... " % _list)
+        write_("Get list '%s' from iBlockList... " % _list, STDOUT, "get_ibl_list")
         r = requests.get(IBL_HTTP_URL % _list)
         # Check HTTP response code
         if r.status_code == requests.codes.ok:
-            if run_output:
-                sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK))
-                sys.stdout.write((" - Downloaded file size: %sMB"
-                                  % round((int(r.headers.get('content-length')) / 1024 / 1024), 2)) + "\n")
+            write_result(OK, " - Downloaded file size: %sMB"
+                         % round((int(r.headers.get('content-length')) / 1024 / 1024), 2) + "\n")
 
             # Decompress, decode as UTF-8 string, and split based on the end of line
             working_list = []
             if r.headers.get('content-type') == 'application/x-gzip':
-                if run_output:
-                    sys.stdout.write("[get_ibl_list] Decompress and decode file...           ")
+                write_("Decompress and decode file...           ", STDOUT, "get_ibl_list")
                 working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
-                if run_output:
-                    sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
+                write_result(OK, "\n")
             # case below should never occurs
             elif r.headers.get('content-type') == 'gzip':
-                if run_output:
-                    sys.stdout.write("[get_ibl_list] Decode file...                   ")
+                write_("Decode file...                   ", STDOUT, "get_ibl_list")
                 working_list = r.content.decode(encoding=IBL_LIST_ENC).split("\n")
-                if run_output:
-                    sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
+                write_result(OK, "\n")
+            # if unexpected format is downloaded
             else:
-                # TODO raise Unexpected format downloaded
-                pass
+                # TODO Fullfil the message details
+                write_("Unexpected file format downloaded (%s) when getting list %s\n" % ("<DATA>", "<DATA>"),
+                       STDERR, "get_ibl_list")
+                continue
 
             # Parse for concerned lines
-            if run_output:
-                sys.stdout.write("[get_ibl_list] Parse '%s' from iBlockList...    " % _list)
-            # remove the 2 first header lines from the blocking list
+            write_("Parse '%s' from iBlockList...    " % _list, STDOUT, "get_ibl_list")
+            # remove the two first header lines from the blocking list
             working_list = working_list[2:]
-            for line in working_list:
+            for _line in working_list:
                 # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", line.casefold()) for word in keywords_list):
+                if any(word in unicodedata.normalize("NFKD", _line.casefold()) for word in keywords_list):
                     #  format entries
-                    name, i = line.split(IBL_SEP)
-                    cidr_ip_range_list = iprange_to_cidr(i)
-                    for cidr_ip_range in cidr_ip_range_list:
+                    _name, _ipr = _line.split(IBL_SEP)
+                    _cidr_ip_range_list = []
+                    try:
+                        _cidr_ip_range_list = iprange_to_cidr(_ipr)
+                    except ipaddress.AddressValueError as ave:
+                        write_("AddressValueError raised when trying to format IP range: %s\n" % str(ave), STDERR,
+                               "get_ibl_list")
+                    except ipaddress.NetmaskValueError as nve:
+                        write_("NetmaskValueError raised when trying to format IP range: %s\n" % str(nve), STDERR,
+                               "get_ibl_list")
+                    except ValueError as ve:
+                        write_("ValueError raised when trying to format IP range: %s\n" % str(ve), STDERR,
+                               "get_ibl_list")
+                    except TypeError as te:
+                        write_("TypeError raised when trying to format IP range: %s\n" % str(te), STDERR,
+                               "get_ibl_list")
+                    for _cidr_ip_range in _cidr_ip_range_list:
                         #  clean duplicate entries
-                        if (name, cidr_ip_range) not in ibl_list:
-                            ibl_list.extend([(name, cidr_ip_range)])
-            if run_output:
-                sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
+                        if (_name, _cidr_ip_range) not in ibl_list:
+                            ibl_list.extend([(_name, _cidr_ip_range)])
+            write_result(OK, "\n")
         else:
-            # TODO raise not 200 OK response after sys.stdout
-            if run_output:
-                sys.stdout.write(((colorama.Fore.RED + NOK + colorama.Style.RESET_ALL) if color else NOK) + "\n")
+            write_result(NOK, " - Received response code %s\n" % r.status_code)
 
     return ibl_list
 
 
 # TODO RIPE list to finish
-def get_ripe_list(color: bool = True, run_output: bool = True, keywords_list: [str] = None) -> [(str, str)]:
+def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
     """
     Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param keywords_list: The keywords list to search for gremlins.
     :return: The formatted RIPE list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
@@ -239,12 +282,10 @@ def get_ripe_list(color: bool = True, run_output: bool = True, keywords_list: [s
     return ripe_list
 
 
-def get_lists(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
-              keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str, str)]:
+def get_lists(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> [
+    (str, str)]:
     """
     Give a global list generated from the different sources specified in arguments.
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param keywords_list: The keywords list to search for gremlins.
@@ -252,44 +293,38 @@ def get_lists(color: bool = True, run_output: bool = True, ibl: bool = True, rip
     :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
     """
     lists = []
+
     if ibl:
-        lists.extend(get_ibl_list(color, run_output, keywords_list, ibl_lists))
-        if run_output:
-            sys.stdout.write("[get_list] List from iBlockList generated\n")
+        lists.extend(get_ibl_list(keywords_list, ibl_lists))
+        write_("List from iBlockList generated\n", STDOUT, "get_lists")
     if ripe:
-        lists.extend(get_ripe_list(color, run_output, keywords_list))
-        if run_output:
-            sys.stdout.write("[get_list] List from the RIPE generated\n")
+        lists.extend(get_ripe_list(keywords_list))
+        write_("List from the RIPE generated\n", STDOUT, "get_lists")
+
     return lists
 
 
-def cmd_list(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
-             keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None):
     """
     Run the 'list' command. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
     """
-    full_list = get_lists(color, run_output, ibl, ripe, keywords_list, ibl_lists)
-    if run_output:
-        sys.stdout.write("[cmd_list] Printing the list...\n\n")
+    full_list = get_lists(ibl, ripe, keywords_list, ibl_lists)
+
+    write_("Printing the list...\n\n", STDOUT, "cmd_list")
     for (name, cidr_ip_range) in full_list:
-        sys.stdout.write(name + "," + cidr_ip_range + "\n")
+        write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
 
 
 # TODO Iptable commands to be finished + Doc + Help
-def cmd_iptables(color: bool = True, run_output: bool = True, ibl: bool = True, ripe: bool = True,
-                 show_list_only: bool = False, host: str = None, port: int = DEFAULT_SSH_PORT,
-                 user: str = None, password: str = None, save: bool = True, keywords_list: [str] = None,
-                 ibl_lists: [str] = None):
+def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = False, host: str = None,
+                 port: int = DEFAULT_SSH_PORT, user: str = None, password: str = None, save: bool = True,
+                 keywords_list: [str] = None, ibl_lists: [str] = None):
     """
     Run the 'iptables' command.
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param show_list_only:
@@ -302,25 +337,23 @@ def cmd_iptables(color: bool = True, run_output: bool = True, ibl: bool = True, 
     :param ibl_lists: The iBlockList list to parse.
     """
     shell_commands_list = []
+    full_list = get_lists(ibl, ripe)
 
-    full_list = get_lists(color, run_output, ibl, ripe)
     # TODO generate iptables shell commands
-    sys.stdout.write("[cmd_iptables] IPTABLES COMMAND TO BE DONE\n")
+    write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, "cmd_iptables")
 
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_fbxos(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_fbxos(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     pass
 
 
 # TODO UTM9 to be finished + Doc + Help
-def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None,
-             user=None, password=None, log=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None, user=None, password=None,
+             log=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     """
     Run the 'utm9' command.
-    :param color: Colorized stdout. True by default.
-    :param run_output: Show running output in stdout. True by default.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param host:
@@ -337,14 +370,13 @@ def cmd_utm9(color=True, run_output=True, ibl=True, ripe=True, host=None, port=D
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_pfsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_pfsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     pass
 
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_opnsense(color=True, run_output=True, ibl=True, ripe=True, keywords_list: [str] = None,
-                 ibl_lists: [str] = None):
+def cmd_opnsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
     pass
 
 
@@ -369,6 +401,11 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
                         action='store_true',
                         default=False
                         )
+    parser.add_argument('-d', '--debug',
+                        dest='debugMode',
+                        action='store_true',
+                        default=False
+                        )
 
     # Options arguments
     parser.add_argument('-Dr', '--disable-ripe',
@@ -382,12 +419,17 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
                         default=True
                         )
     parser.add_argument('-Dc', '--disable-coloring',
-                        dest='colorOutput',
+                        dest='colorizeOutput',
+                        action='store_false',
+                        default=True
+                        )
+    parser.add_argument('-De', '--disable-error',
+                        dest='showRunningError',
                         action='store_false',
                         default=True
                         )
     parser.add_argument('-c', '--clean-output',
-                        dest='fullOutput',
+                        dest='showRunningOutpout',
                         action='store_false',
                         default=True
                         )
@@ -579,83 +621,88 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
 
 
 def main():
+    # Load the global variables as writable by the main function
+    global gvar_colorize_output, gvar_show_running_output, gvar_show_debug_info, gvar_show_running_error
+
     try:
         # Parse the command arguments
         parser = init_args()
         args = parser.parse_args()
 
+        # Set the global variables according to the given arguments
+        gvar_colorize_output = args.colorizeOutput
+        gvar_show_running_output = args.showRunningOutpout
+        gvar_show_debug_info = args.debugMode
+        gvar_show_running_error = args.showRunningError
+
         # Make ANSI escapes work with MS Windows
-        if args.colorOutput and OS_IS_WIN:
+        if gvar_colorize_output and OS_IS_WIN:
             colorama.init()
 
         # Output standard information
         if args.showVersion:
-            sys.stdout.write(VERSION_STRING)
+            write_(VERSION_STRING, STDOUT, "main")
         else:
-            if args.fullOutput:
-                sys.stdout.write(BANNER % ((colorama.Style.BRIGHT + colorama.Fore.GREEN,
-                                            colorama.Style.RESET_ALL,
-                                            colorama.Style.BRIGHT + colorama.Fore.WHITE,
-                                            colorama.Style.RESET_ALL
-                                            ) if args.colorOutput else ('', '', '', '')))
+            if args.showRunningOutpout:
+                write_(BANNER % ((colorama.Style.BRIGHT + colorama.Fore.GREEN,
+                                  colorama.Style.RESET_ALL,
+                                  colorama.Style.BRIGHT + colorama.Fore.WHITE,
+                                  colorama.Style.RESET_ALL
+                                  ) if args.colorizeOutput else ('', '', '', '')))
             # Let's go running
             if args.showHelp:
-                sys.stdout.write(HELP % (BASENAME_PROG, BASENAME_PROG))
+                write_(HELP % (BASENAME_PROG, BASENAME_PROG))
             elif args.cmd == CMD_LIST:
                 if args.showListHelp:
-                    sys.stdout.write(HELP_LIST % (BASENAME_PROG, CMD_LIST))
+                    write_(HELP_LIST % (BASENAME_PROG, CMD_LIST))
                 else:
-                    cmd_list(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                             IBL_LISTS)
+                    cmd_list(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_IPTABLES:
                 if args.showIptablesHelp:
-                    sys.stdout.write(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
+                    write_(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
-                    cmd_iptables(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE,
-                                 args.showListOnly, args.host, args.port, args.user, args.password, args.save,
-                                 KEYWORDS_LIST, IBL_LISTS)
+                    cmd_iptables(args.queryiBlockList, args.queryRIPE, args.showListOnly, args.host, args.port,
+                                 args.user, args.password, args.save, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
-                    sys.stdout.write(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
+                    write_(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
                     # TODO Args to review
-                    cmd_fbxos(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                              IBL_LISTS)
+                    cmd_fbxos(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
-                    sys.stdout.write(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
+                    write_(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
-                    cmd_utm9(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, args.host,
-                             args.port, args.token, args.user, args.password, args.log, KEYWORDS_LIST, IBL_LISTS)
+                    cmd_utm9(args.queryiBlockList, args.queryRIPE, args.host, args.port, args.token, args.user,
+                             args.password, args.log, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
-                    sys.stdout.write(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
+                    write_(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
                     # TODO Args to review
-                    cmd_pfsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                                IBL_LISTS)
+                    cmd_pfsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
-                    sys.stdout.write(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
+                    write_(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
                     # TODO Args to review
-                    cmd_opnsense(args.colorOutput, args.fullOutput, args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST,
-                                 IBL_LISTS)
+                    cmd_opnsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
             else:
-                sys.stdout.write(HELP % (BASENAME_PROG, BASENAME_PROG))
+                write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
-        sys.stderr.write(str(ki))
-        exit(error.ERROR_CODE_EXCEPTION)
+        write_("KeyboardInterrupt stopped the execution. Exiting the program...\n", STDERR, "main")
+        exit(ERROR_CODE_EXCEPTION)
     except requests.RequestException as re:
-        sys.stderr.write(str(re))
-        exit(error.ERROR_CODE_EXCEPTION)
+        write_("Unhandled RequestException from the 'requests' library has been raised: %s. Exiting the program...\n"
+               % str(re), STDERR, "main")
+        exit(ERROR_CODE_EXCEPTION)
     except Exception as e:
-        # TODO exceptions to review
-        sys.stderr.write(str(type(e)) + ": " + str(e))
-        exit(error.ERROR_CODE_EXCEPTION)
+        write_("Unhandled exception (Type: %s) has been raised: %s. Exiting the program...\n" % (str(type(e)), str(e)),
+               STDERR, "main")
+        exit(ERROR_CODE_EXCEPTION)
     finally:
-        # TODO Clear cache ?
-        exit(error.ERROR_CODE_NORMAL)
+        # TODO Clear cache?
+        exit(ERROR_CODE_NORMAL)
 
 
 if __name__ == "__main__":
