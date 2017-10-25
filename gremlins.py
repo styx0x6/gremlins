@@ -27,7 +27,7 @@ import ipaddress
 
 # Import settings
 from static.settings import PROJECT_NAME, VERSION_STRING, VALID_PYTHON_VERSION, \
-    CMD_LIST, CMD_IPTABLES, CMD_FBXOS, CMD_UTM9, CMD_PFSENSE, CMD_OPNSENSE, \
+    CMD_HELP, CMD_LIST, CMD_IPTABLES, CMD_FBXOS, CMD_UTM9, CMD_PFSENSE, CMD_OPNSENSE, \
     DEFAULT_SSH_PORT, DEFAULT_FBX_HTTP_PORT, DEFAULT_UTM9_HTTPS_PORT, \
     DEFAULT_PFSENSE_HTTPS_PORT, DEFAULT_OPNSENSE_HTTPS_PORT, \
     IBL_HTTP_URL, IBL_LIST_ENC, IBL_SEP, \
@@ -453,6 +453,9 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
                         default=True
                         )
 
+    # help command arguments (not documented and so hidden)
+    subparsers.add_parser(CMD_HELP, add_help=add_help)
+
     # list command arguments
     parser_list = subparsers.add_parser(CMD_LIST, add_help=add_help)
     parser_list.add_argument('-h', '--help',
@@ -718,7 +721,7 @@ def main():
                     write_debug("Started executing the cmd: %s\n" % CMD_OPNSENSE, STDOUT, _f_name)
                     # TODO Args to review
                     cmd_opnsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
-            else:
+            else: # will also match CMD_HELP
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
         write_("KeyboardInterrupt stopped the execution. Exiting the program...\n", STDERR, _f_name)

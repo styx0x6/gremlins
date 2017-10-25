@@ -43,6 +43,7 @@ GIT_REPOSITORY = "git://github.com/styx0x6/gremlins.git"
 """
 Gremlins static settings
 """
+CMD_HELP = 'help'
 CMD_LIST = 'list'
 CMD_IPTABLES = 'iptables'
 CMD_FBXOS = 'fbxos'
@@ -93,8 +94,6 @@ STR_OK = "OK!"
 STR_NOK = "NOK"
 STR_ERR = "[ERR]"
 STR_DEBUG = "[%s] "  # debug information shall be provided here
-
-
 
 # Default parameters for outputs
 DEFAULT_COLORIZE_OUTPUT = True  # by default, output is colorized
