@@ -1,3 +1,5 @@
+[![Python 3.3](https://img.shields.io/badge/Python-3.3-blue.svg)](https://www.python.org/) [![License AGPL-3.0+](https://img.shields.io/badge/License-AGPL-3.0+-blue.svg)](https://raw.githubusercontent.com/styx0x6/gremlins/master/LICENSE)
+
 # Gremlins
 
 About
