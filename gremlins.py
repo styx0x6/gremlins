@@ -311,10 +311,10 @@ def get_full_list(ibl: bool = True, ripe: bool = True) -> [(str, str, str)]:
 
     if ibl:
         lists.extend(get_ibl_list())
-        write_("List from iBlockList generated.\n", STDOUT, _f_name)
+        write_("-> List from iBlockList generated.\n", STDOUT, _f_name)
     if ripe:
         lists.extend(get_ripe_list())
-        write_("List from the RIPE generated.\n", STDOUT, _f_name)
+        write_("-> List from the RIPE generated.\n", STDOUT, _f_name)
 
     return lists
 
