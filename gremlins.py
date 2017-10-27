@@ -26,21 +26,55 @@ import unicodedata
 import ipaddress
 
 # Import settings
-from static.settings import PROJECT_NAME, VERSION_STRING, VALID_PYTHON_VERSION, \
-    CMD_HELP, CMD_LIST, CMD_IPTABLES, CMD_FBXOS, CMD_UTM9, CMD_PFSENSE, CMD_OPNSENSE, \
-    DEFAULT_SSH_PORT, DEFAULT_FBX_HTTP_PORT, DEFAULT_UTM9_HTTPS_PORT, \
-    DEFAULT_PFSENSE_HTTPS_PORT, DEFAULT_OPNSENSE_HTTPS_PORT, \
-    IBL_HTTP_URL, IBL_LIST_ENC, IBL_SEP, \
-    RIPE_HTTP_REST_URL, RIPE_JSON_NAME_LIST, RIPE_JSON_INETNUM, \
-    IBL_LISTS, KEYWORDS_LIST, \
-    STDOUT, STDERR, OK, NOK, STR_OK, STR_NOK, STR_ERR, STR_DEBUG, \
-    DEFAULT_COLORIZE_OUTPUT, DEFAULT_SHOW_RUNNING_OUTPUT, DEFAULT_SHOW_DEBUG_INFO, DEFAULT_SHOW_RUNNING_ERROR, \
-    BANNER, \
-    HELP, HELP_LIST, HELP_IPTABLES, HELP_FBXOS, HELP_UTM9, HELP_PFSENSE, HELP_OPNSENSE
+from static.settings import PROJECT_NAME
+from static.settings import VERSION_STRING
+from static.settings import VALID_PYTHON_VERSION
+from static.settings import CMD_HELP
+from static.settings import CMD_LIST
+from static.settings import CMD_IPTABLES
+from static.settings import CMD_FBXOS
+from static.settings import CMD_UTM9
+from static.settings import CMD_PFSENSE
+from static.settings import CMD_OPNSENSE
+from static.settings import DEFAULT_SSH_PORT
+from static.settings import DEFAULT_FBX_HTTP_PORT
+from static.settings import DEFAULT_UTM9_HTTPS_PORT
+from static.settings import DEFAULT_PFSENSE_HTTPS_PORT
+from static.settings import DEFAULT_OPNSENSE_HTTPS_PORT
+from static.settings import IBL_HTTP_URL
+from static.settings import IBL_LIST_ENC
+from static.settings import IBL_SEP
+from static.settings import RIPE_HTTP_REST_URL
+from static.settings import RIPE_JSON_NAME_LIST
+from static.settings import RIPE_JSON_INETNUM
+from static.settings import IBL_LISTS
+from static.settings import KEYWORDS_LIST
+from static.settings import STDOUT
+from static.settings import STDERR
+from static.settings import OK
+from static.settings import NOK
+from static.settings import STR_OK
+from static.settings import STR_NOK
+from static.settings import STR_ERR
+from static.settings import STR_DEBUG
+from static.settings import DEFAULT_COLORIZE_OUTPUT
+from static.settings import DEFAULT_SHOW_RUNNING_OUTPUT
+from static.settings import DEFAULT_SHOW_DEBUG_INFO
+from static.settings import DEFAULT_SHOW_RUNNING_ERROR
+from static.settings import BANNER
+from static.settings import HELP
+from static.settings import HELP_LIST
+from static.settings import HELP_IPTABLES
+from static.settings import HELP_FBXOS
+from static.settings import HELP_UTM9
+from static.settings import HELP_PFSENSE
+from static.settings import HELP_OPNSENSE
 
 # Import error codes and messages
-from static.error import ERROR_CODE_NORMAL, ERROR_CODE_VERSION, ERROR_CODE_EXCEPTION, \
-    ERR_CRITICAL_VERSION
+from static.error import ERROR_CODE_NORMAL
+from static.error import ERROR_CODE_VERSION
+from static.error import ERROR_CODE_EXCEPTION
+from static.error import ERR_CRITICAL_VERSION
 
 from lib.thirdparty import colorama
 from lib.thirdparty import requests
@@ -79,7 +113,7 @@ def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: b
     debug_prefix = (STR_DEBUG % debug_info) if ((gvar_show_debug_info or std is STDERR) and debug_info is not "") \
         else ""
     err_prefix = ((colorama.Fore.RED + STR_ERR + colorama.Style.RESET_ALL) if gvar_colorize_output else STR_ERR) \
-                 + debug_prefix
+        + debug_prefix
 
     if is_raw_data:
         sys.stdout.write(message)
