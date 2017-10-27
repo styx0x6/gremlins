@@ -6,4 +6,21 @@ rvm:
   - "3.6"
   - "nightly"
   - "pypy3"
-script: python -c "import gremlins"
+script:
+  # Test unexpected calls
+  - python gremlins.py
+  - python gremlins.py -d
+  - python gremlins.py -t
+  - python gremlins.py test
+  - python gremlins.py -test test
+  # Test expected calls
+  - python gremlins.py -v
+  - python gremlins.py -h
+  - python gremlins.py help
+  - python gremlins.py list
+  - python gremlins.py -d list
+  - python gremlins.py -c list
+  - python gremlins.py -Dc list
+  - python gremlins.py -Dr -Di list
+  - python gremlins.py -Dr -Di -De list
+  - python gremlins.py -Dr -Di -De -Dc list
