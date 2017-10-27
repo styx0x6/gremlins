@@ -277,12 +277,9 @@ def get_ripe_list() -> [(str, str)]:
             if r.headers.get('content-type') == 'application/json':
                 write_("Parsing the JSON response...    ", STDOUT, _f_name)
                 try:
-                    """
-                    dict_parsed_json = r.json()
-                    if dict_parsed_json is not None:
-                        print(dict_parsed_json['objects'])
-                    """
-                    pass
+                    dict_json = r.json()
+                    if dict_json is not None:
+                        print(dict_json['objects'])
                 except ValueError as ve:
                     write_("ValueError raised when trying to decode JSON: %s\n" % str(ve), STDERR, _f_name)
                 write_result(OK, "\n")
@@ -334,8 +331,14 @@ def cmd_list(ibl: bool = True, ripe: bool = True):
     full_list = get_full_list(ibl, ripe)
 
     write_("Printing the full list...\n\n", STDOUT, _f_name)
+    # TODO To use with 3-tuple implementation
+    """
     for (source, name, cidr_ip_range) in full_list:
         write_(source + "," + name + "," + cidr_ip_range + "\n", is_raw_data=True)
+    """
+    # TODO To delete after 3-tuple implementation
+    for (name, cidr_ip_range) in full_list:
+        write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
 
 
 # TODO Iptable commands to be finished + Doc + Help
