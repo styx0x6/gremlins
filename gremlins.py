@@ -79,7 +79,7 @@ def write_(message: str, std: int = STDOUT, debug_info: str = "", is_raw_data: b
     debug_prefix = (STR_DEBUG % debug_info) if ((gvar_show_debug_info or std is STDERR) and debug_info is not "") \
         else ""
     err_prefix = ((colorama.Fore.RED + STR_ERR + colorama.Style.RESET_ALL) if gvar_colorize_output else STR_ERR) \
-        + debug_prefix
+                 + debug_prefix
 
     if is_raw_data:
         sys.stdout.write(message)
@@ -148,12 +148,13 @@ def iprange_to_cidr(ip_range: str = None) -> [str]:
     return cidr_ip_range_list
 
 
+# TODO Return a 3-tuple
 def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str, str)]:
     """
-    Get the formatted list from iBlockList. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
+    Get the formatted list from iBlockList. Formatted as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
-    :return: The formatted iBlockList list as [('BAD IPs', 'x.x.x.x/y'),...].
+    :return: The formatted iBlockList list as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
@@ -168,8 +169,8 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
             write_result(OK, " - Downloaded file size: %sMB"
                          % round((int(r.headers.get('content-length')) / 1024 / 1024), 2) + "\n")
 
-            # Decompress, decode as UTF-8 string, and split based on the end of line
             working_list = []
+            # Decompress, decode as UTF-8 string, and split based on the end of line
             if r.headers.get('content-type') == 'application/x-gzip':
                 write_("Decompressing and decoding the file...      ", STDOUT, _f_name)
                 working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
@@ -181,9 +182,8 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
                 write_result(OK, "\n")
             # if unexpected format is downloaded
             else:
-                # TODO Fullfil the message details
-                write_("Unexpected file format downloaded (%s) when getting list %s\n" % ("<DATA>", "<DATA>"), STDERR,
-                       _f_name)
+                write_("Unexpected file format downloaded (%s) when getting list '%s'\n"
+                       % (r.headers.get('content-type'), _list), STDERR, _f_name)
                 continue
 
             # Parse for concerned lines
@@ -216,83 +216,67 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
                             ibl_list.extend([(_name, _cidr_ip_range)])
             write_result(OK, "\n")
         else:
+            # received another response code than 200 OK
             write_result(NOK, " - Received response code %s\n" % r.status_code)
 
     return ibl_list
 
 
-# TODO RIPE list to finish
+# TODO Return a 3-tuple
 def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
     """
-    Get the formatted list from the RIPE. Formatted as [('BAD IPs', 'x.x.x.x/y'),...].
+    Get the formatted list from the RIPE. Formatted as [('RIPE','BAD IPs', 'x.x.x.x/y'),...].
     :param keywords_list: The keywords list to search for gremlins.
-    :return: The formatted RIPE list as [('BAD IPs', 'x.x.x.x/y'),...].
+    :return: The formatted RIPE list as [('RIPE','BAD IPs', 'x.x.x.x/y'),...].
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
     ripe_list = []
 
-    if run_output:
-        sys.stdout.write("\n")
-
     for _word in keywords_list:
-        if run_output:
-            sys.stdout.write("[get_ripe_list] Requesting RIPE for '%s'... " % _word)
-
+        write_("Requesting RIPE for '%s'... " % _word, STDOUT, _f_name)
         r = requests.get(RIPE_HTTP_REST_URL % _word)
-
         # Check HTTP response code
         if r.status_code == requests.codes.ok:
-            if run_output:
-                sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
+            write_result(OK, "\n")
 
-            # Parse the JSON response
             working_list = []
+            # Parse the JSON response
             if r.headers.get('content-type') == 'application/json':
-                if run_output:
-                    sys.stdout.write("[get_ripe_list] Parsing the JSON response... ")
-                # TODO Parse the response
-                """
-                dict_parsed_json = r.json()
-                if dict_parsed_json !=
-                print(dict_parsed_json['objects'].)
-                """
-                """
-                if run_output:
-                    sys.stdout.write(((colorama.Fore.GREEN + OK + colorama.Style.RESET_ALL) if color else OK) + "\n")
-                """
-                sys.stdout.write("[get_ripe_list] TO BE IMPLEMENTED\n")
+                write_("Parsing the JSON response...    ", STDOUT, _f_name)
+                try:
+                    """
+                    dict_parsed_json = r.json()
+                    if dict_parsed_json is not None:
+                        print(dict_parsed_json['objects'])
+                    """
+                    pass
+                except ValueError as ve:
+                    write_("ValueError raised when trying to decode JSON: %s\n" % str(ve), STDERR, _f_name)
+                write_result(OK, "\n")
             # case below should never occurs
             else:
-                # TODO raise Unexpected format received
-                pass
+                write_("Unexpected content-type response received (%s) when requesting RIPE for '%s'\n"
+                       % (r.headers.get('content-type'), _word), STDERR, _f_name)
+        elif r.status_code == 404:
+            write_("Not Found\n")
         else:
-            # TODO raise not 200 OK response after sys.stdout
-            if run_output:
-                sys.stdout.write(((colorama.Fore.RED + NOK + colorama.Style.RESET_ALL) if color else NOK) + "\n")
-
-            if r.status_code == requests.codes.bad_request:
-                # TODO Illegal input - incorrect value in one or more of the parameters
-                # TODO to test and finish
-                # TODO r.raise_for_status()
-                pass
-            elif r.status_code == requests.codes.not_found:
-                # TODO No object(s) found
-                pass
+            # received another response code than 200 OK or 404 Not Found
+            write_result(NOK, " - Received response code %s\n" % r.status_code)
 
     return ripe_list
 
 
-def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> [
-    (str, str)]:
+def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> \
+        [(str, str, str)]:
     """
     Give a global list generated from the different sources specified in arguments.
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param keywords_list: The keywords list to search for gremlins.
     :param ibl_lists: The iBlockList list to parse.
-    :return: The global list as [('BAD IPs', 'x.x.x.x/y'),...].
+    :return: The global list as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
@@ -301,17 +285,17 @@ def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = No
 
     if ibl:
         lists.extend(get_ibl_list(keywords_list, ibl_lists))
-        write_("List from iBlockList generated\n", STDOUT, _f_name)
+        write_("List from iBlockList generated.\n", STDOUT, _f_name)
     if ripe:
         lists.extend(get_ripe_list(keywords_list))
-        write_("List from the RIPE generated\n", STDOUT, _f_name)
+        write_("List from the RIPE generated.\n", STDOUT, _f_name)
 
     return lists
 
 
 def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None):
     """
-    Run the 'list' command. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
+    Run the 'list' command. Print each line in CSV format "<SOURCE>,<NAME>,<CIDR_IP_RANGE>".
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
     :param keywords_list: The keywords list to search for gremlins.
@@ -323,8 +307,8 @@ def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, i
     full_list = get_full_list(ibl, ripe, keywords_list, ibl_lists)
 
     write_("Printing the full list...\n\n", STDOUT, _f_name)
-    for (name, cidr_ip_range) in full_list:
-        write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
+    for (source, name, cidr_ip_range) in full_list:
+        write_(source + "," + name + "," + cidr_ip_range + "\n", is_raw_data=True)
 
 
 # TODO Iptable commands to be finished + Doc + Help
@@ -721,7 +705,7 @@ def main():
                     write_debug("Started executing the cmd: %s\n" % CMD_OPNSENSE, STDOUT, _f_name)
                     # TODO Args to review
                     cmd_opnsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
-            else: # will also match CMD_HELP
+            else:  # will also match CMD_HELP
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
         write_("KeyboardInterrupt stopped the execution. Exiting the program...\n", STDERR, _f_name)
