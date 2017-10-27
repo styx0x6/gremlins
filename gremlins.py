@@ -183,19 +183,17 @@ def iprange_to_cidr(ip_range: str = None) -> [str]:
 
 
 # TODO Return a 3-tuple
-def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str, str)]:
+def get_ibl_list() -> [(str, str)]:
     """
     Get the formatted list from iBlockList. Formatted as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
-    :param keywords_list: The keywords list to search for gremlins.
-    :param ibl_lists: The iBlockList list to parse.
-    :return: The formatted iBlockList list as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
+    :return: The formatted iBlockList list.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
     ibl_list = []
 
-    for _list in ibl_lists:
+    for _list in IBL_LISTS:
         write_("Getting list '%s' from iBlockList... " % _list, STDOUT, _f_name)
         r = requests.get(IBL_HTTP_URL % _list)
         # Check HTTP response code
@@ -226,7 +224,7 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
             working_list = working_list[2:]
             for _line in working_list:
                 # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", _line.casefold()) for word in keywords_list):
+                if any(word in unicodedata.normalize("NFKD", _line.casefold()) for word in KEYWORDS_LIST):
                     #  format entries
                     _name, _ipr = _line.split(IBL_SEP)
                     _cidr_ip_range_list = []
@@ -257,18 +255,17 @@ def get_ibl_list(keywords_list: [str] = None, ibl_lists: [str] = None) -> [(str,
 
 
 # TODO Return a 3-tuple
-def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
+def get_ripe_list() -> [(str, str)]:
     """
     Get the formatted list from the RIPE. Formatted as [('RIPE','BAD IPs', 'x.x.x.x/y'),...].
-    :param keywords_list: The keywords list to search for gremlins.
-    :return: The formatted RIPE list as [('RIPE','BAD IPs', 'x.x.x.x/y'),...].
+    :return: The formatted RIPE list.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
     ripe_list = []
 
-    for _word in keywords_list:
+    for _word in KEYWORDS_LIST:
         write_("Requesting RIPE for '%s'... " % _word, STDOUT, _f_name)
         r = requests.get(RIPE_HTTP_REST_URL % _word)
         # Check HTTP response code
@@ -302,15 +299,13 @@ def get_ripe_list(keywords_list: [str] = None) -> [(str, str)]:
     return ripe_list
 
 
-def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None) -> \
-        [(str, str, str)]:
+def get_full_list(ibl: bool = True, ripe: bool = True) -> [(str, str, str)]:
     """
     Give a global list generated from the different sources specified in arguments.
+    Formatted as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
-    :param keywords_list: The keywords list to search for gremlins.
-    :param ibl_lists: The iBlockList list to parse.
-    :return: The global list as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
+    :return: The global list.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
@@ -318,27 +313,25 @@ def get_full_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = No
     lists = []
 
     if ibl:
-        lists.extend(get_ibl_list(keywords_list, ibl_lists))
+        lists.extend(get_ibl_list())
         write_("List from iBlockList generated.\n", STDOUT, _f_name)
     if ripe:
-        lists.extend(get_ripe_list(keywords_list))
+        lists.extend(get_ripe_list())
         write_("List from the RIPE generated.\n", STDOUT, _f_name)
 
     return lists
 
 
-def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_list(ibl: bool = True, ripe: bool = True):
     """
     Run the 'list' command. Print each line in CSV format "<SOURCE>,<NAME>,<CIDR_IP_RANGE>".
     :param ibl: Should use iBlockList as information source. True by default.
     :param ripe: Should use the RIPE as information source. True by default.
-    :param keywords_list: The keywords list to search for gremlins.
-    :param ibl_lists: The iBlockList list to parse.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
-    full_list = get_full_list(ibl, ripe, keywords_list, ibl_lists)
+    full_list = get_full_list(ibl, ripe)
 
     write_("Printing the full list...\n\n", STDOUT, _f_name)
     for (source, name, cidr_ip_range) in full_list:
@@ -347,8 +340,7 @@ def cmd_list(ibl: bool = True, ripe: bool = True, keywords_list: [str] = None, i
 
 # TODO Iptable commands to be finished + Doc + Help
 def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = False, host: str = None,
-                 port: int = DEFAULT_SSH_PORT, user: str = None, password: str = None, save: bool = True,
-                 keywords_list: [str] = None, ibl_lists: [str] = None):
+                 port: int = DEFAULT_SSH_PORT, user: str = None, password: str = None, save: bool = True):
     """
     Run the 'iptables' command.
     :param ibl: Should use iBlockList as information source. True by default.
@@ -359,8 +351,6 @@ def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = Fal
     :param user:
     :param password:
     :param save:
-    :param keywords_list: The keywords list to search for gremlins.
-    :param ibl_lists: The iBlockList list to parse.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
@@ -374,7 +364,7 @@ def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = Fal
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_fbxos(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_fbxos(ibl=True, ripe=True):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
@@ -382,7 +372,7 @@ def cmd_fbxos(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str]
 
 # TODO UTM9 to be finished + Doc + Help
 def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None, user=None, password=None,
-             log=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+             log=True):
     """
     Run the 'utm9' command.
     :param ibl: Should use iBlockList as information source. True by default.
@@ -393,8 +383,6 @@ def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token
     :param user:
     :param password:
     :param log:
-    :param keywords_list: The keywords list to search for gremlins.
-    :param ibl_lists: The iBlockList list to parse.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
@@ -403,7 +391,7 @@ def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_pfsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_pfsense(ibl=True, ripe=True):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
@@ -411,7 +399,7 @@ def cmd_pfsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [st
 
 # TODO To be implemented
 # TODO Args to review
-def cmd_opnsense(ibl=True, ripe=True, keywords_list: [str] = None, ibl_lists: [str] = None):
+def cmd_opnsense(ibl=True, ripe=True):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
@@ -703,42 +691,42 @@ def main():
                     write_(HELP_LIST % (BASENAME_PROG, CMD_LIST))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_LIST, STDOUT, _f_name)
-                    cmd_list(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
+                    cmd_list(args.queryiBlockList, args.queryRIPE)
             elif args.cmd == CMD_IPTABLES:
                 if args.showIptablesHelp:
                     write_(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_IPTABLES, STDOUT, _f_name)
                     cmd_iptables(args.queryiBlockList, args.queryRIPE, args.showListOnly, args.host, args.port,
-                                 args.user, args.password, args.save, KEYWORDS_LIST, IBL_LISTS)
+                                 args.user, args.password, args.save)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
                     write_(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_FBXOS, STDOUT, _f_name)
                     # TODO Args to review
-                    cmd_fbxos(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
+                    cmd_fbxos(args.queryiBlockList, args.queryRIPE)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
                     write_(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_UTM9, STDOUT, _f_name)
                     cmd_utm9(args.queryiBlockList, args.queryRIPE, args.host, args.port, args.token, args.user,
-                             args.password, args.log, KEYWORDS_LIST, IBL_LISTS)
+                             args.password, args.log)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
                     write_(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_PFSENSE, STDOUT, _f_name)
                     # TODO Args to review
-                    cmd_pfsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
+                    cmd_pfsense(args.queryiBlockList, args.queryRIPE)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
                     write_(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_OPNSENSE, STDOUT, _f_name)
                     # TODO Args to review
-                    cmd_opnsense(args.queryiBlockList, args.queryRIPE, KEYWORDS_LIST, IBL_LISTS)
+                    cmd_opnsense(args.queryiBlockList, args.queryRIPE)
             else:  # will also match CMD_HELP
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:
