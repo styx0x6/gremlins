@@ -37,7 +37,8 @@ from static.settings import CMD_UTM9
 from static.settings import CMD_PFSENSE
 from static.settings import CMD_OPNSENSE
 from static.settings import DEFAULT_SSH_PORT
-from static.settings import DEFAULT_FBX_HTTP_PORT
+from static.settings import DEFAULT_FBX_HOST
+from static.settings import DEFAULT_FBX_HTTPS_PORT
 from static.settings import DEFAULT_UTM9_HTTPS_PORT
 from static.settings import DEFAULT_PFSENSE_HTTPS_PORT
 from static.settings import DEFAULT_OPNSENSE_HTTPS_PORT
@@ -521,12 +522,12 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
     parser_fbxos.add_argument('-H', '--host',
                               dest='host',
                               action='store',
-                              default=None
+                              default=DEFAULT_FBX_HOST
                               )
     parser_fbxos.add_argument('-P', '--port',
                               dest='port',
                               action='store',
-                              default=DEFAULT_FBX_HTTP_PORT
+                              default=DEFAULT_FBX_HTTPS_PORT
                               )
     parser_fbxos.add_argument('-u', '--user',
                               dest='user',

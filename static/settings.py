@@ -52,8 +52,8 @@ CMD_PFSENSE = 'pfsense'
 CMD_OPNSENSE = 'opnsense'
 
 DEFAULT_SSH_PORT = '22'
-DEFAULT_FBX_HTTP_PORT = '80'
-# TODO Needed: DEFAULT_FBX_HTTPS_PORT = '48597' ?
+DEFAULT_FBX_HOST = 'mafreebox.freebox.fr'
+DEFAULT_FBX_HTTPS_PORT = '443'
 DEFAULT_UTM9_HTTPS_PORT = '4444'
 DEFAULT_PFSENSE_HTTPS_PORT = '443'
 DEFAULT_OPNSENSE_HTTPS_PORT = '443'
@@ -136,7 +136,7 @@ Commands:
 
   list                          Show the CIDR IP addresses list.
   iptables                      Push iptables blocking ruleset
-  fbxos (TBI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+)
+  fbxos (TBI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+, APIv4)
   utm9                          Push Sophos UTM 9 Firewall blocking ruleset (v9.408+)
   pfsense (TBI)                 Push NetGate pfSense firewall blocking ruleset
   opnsense (TBI)                Push Deciso OPNsense Firewall blocking ruleset
@@ -162,7 +162,7 @@ Push iptables blocking ruleset
 """
 
 # TODO Detail args and add long args
-# TODO TO BE IMPLEMENTED
+# TODO TO BE IMPLEMENTED - Say that default internal mafreebox.freebox.fr:443
 HELP_FBXOS = """
 Usage: %s %s [-h] [-H <host> [-P <port>] -u <user> -p <password>] [-s]
 
