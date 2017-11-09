@@ -21,7 +21,6 @@ import ipaddress
 
 ERR_INVALID_CIDR_IPV4_NET = "Invalid CIDR IPv4 network format"
 ERR_INVALID_CIDR_IPV6_NET = "Invalid CIDR IPv6 network format"
-ERR_INVALID_NET_TYPE = "Invalid network type"
 
 
 class GremlinsListError(Exception):
@@ -37,11 +36,6 @@ class GremlinsListIPv4NetworkError(GremlinsListError):
 class GremlinsListIPv6NetworkError(GremlinsListError):
     def __init__(self):
         super(GremlinsListIPv6NetworkError, self).__init__(ERR_INVALID_CIDR_IPV6_NET)
-
-
-class GremlinsListNetworkTypeError(GremlinsListError):
-    def __init__(self):
-        super(GremlinsListNetworkTypeError, self).__init__(ERR_INVALID_NET_TYPE)
 
 
 class GremlinsList:
