@@ -19,10 +19,9 @@
 
 import ipaddress
 
-ERR_INSTANCE_ALREADY_INIT = "GremlinsList instance is already initiated. \
-Use the get_instance static method to get the initiated instance"
-ERR_INVALID_CIDR_IPV4_NET = "Invalid CIDR IPv4 network format"
-ERR_INVALID_CIDR_IPV6_NET = "Invalid CIDR IPv6 network format"
+from static.error import ERR_LIST_INSTANCE_ALREADY_INIT
+from static.error import ERR_LIST_INVALID_CIDR_IPV4_NET
+from static.error import ERR_LIST_INVALID_CIDR_IPV6_NET
 
 
 class GremlinsListError(Exception):
@@ -32,17 +31,17 @@ class GremlinsListError(Exception):
 
 class GremlinsListInstanceInitError(GremlinsListError):
     def __init__(self):
-        super(GremlinsListInstanceInitError, self).__init__(ERR_INSTANCE_ALREADY_INIT)
+        super(GremlinsListInstanceInitError, self).__init__(ERR_LIST_INSTANCE_ALREADY_INIT)
 
 
 class GremlinsListIPv4NetworkError(GremlinsListError):
     def __init__(self):
-        super(GremlinsListIPv4NetworkError, self).__init__(ERR_INVALID_CIDR_IPV4_NET)
+        super(GremlinsListIPv4NetworkError, self).__init__(ERR_LIST_INVALID_CIDR_IPV4_NET)
 
 
 class GremlinsListIPv6NetworkError(GremlinsListError):
     def __init__(self):
-        super(GremlinsListIPv6NetworkError, self).__init__(ERR_INVALID_CIDR_IPV6_NET)
+        super(GremlinsListIPv6NetworkError, self).__init__(ERR_LIST_INVALID_CIDR_IPV6_NET)
 
 
 class GremlinsList:
