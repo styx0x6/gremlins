@@ -26,6 +26,10 @@ def iprange_to_cidr(ip_range: str = None) -> [str]:
     to its corresponding CIDR list.
     :param ip_range: IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y').
     :return: IP range addresses string as its corresponding CIDR string list.
+    :raises ipaddress.AddressValueError: Raised by the ipaddress library when address is incorrect.
+    :raises ipaddress.NetmaskValueError: Raised by the ipaddress library when netmask is incorrect.
+    :raises ValueError: Raised by the ipaddress library when values are incorrect.
+    :raises TypeError: Raised by the ipaddress library when given objects types are incorrect.
     """
     cidr_ip_range_list = []
     ip_start, ip_end = ip_range.split("-")
