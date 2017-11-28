@@ -22,6 +22,8 @@ import ipaddress
 from static.error import ERR_LIST_INSTANCE_ALREADY_INIT
 from static.error import ERR_LIST_INVALID_CIDR_IPV4_NET
 from static.error import ERR_LIST_INVALID_CIDR_IPV6_NET
+from static.error import ERR_LIST_KEY_ALREADY_EXISTS
+from static.error import ERR_LIST_KEY_NOT_FOUND
 
 
 class GremlinsListError(Exception):
@@ -42,6 +44,16 @@ class GremlinsListIPv4NetworkError(GremlinsListError):
 class GremlinsListIPv6NetworkError(GremlinsListError):
     def __init__(self):
         super(GremlinsListIPv6NetworkError, self).__init__(ERR_LIST_INVALID_CIDR_IPV6_NET)
+
+
+class GremlinsListKeyAlreadyExists(GremlinsListError):
+    def __init__(self):
+        super(GremlinsListKeyAlreadyExists, self).__init__(ERR_LIST_KEY_ALREADY_EXISTS)
+
+
+class GremlinsListKeyNotFound(GremlinsListError):
+    def __init__(self):
+        super(GremlinsListKeyNotFound, self).__init__(ERR_LIST_KEY_NOT_FOUND)
 
 
 class GremlinsList:
@@ -70,55 +82,116 @@ class GremlinsList:
         if isinstance(GremlinsList.__instance, GremlinsList):
             raise GremlinsListInstanceInitError()
         else:
-            self._list_IPv4 = {}
-            self._list_IPv6 = {}
+            self._dict_IPv4 = {}
+            self._dict_IPv6 = {}
             GremlinsList.__instance = self
 
     def __str__(self):
-        return 'GremlinsList: list_ipv4 length: %i, list_ipv6 length: %i' % \
-               (len(self._list_IPv4), len(self._list_IPv6))
+        return 'GremlinsList: dict_ipv4 length: %i, dict_ipv6 length: %i' % \
+               (len(self._dict_IPv4), len(self._dict_IPv6))
 
     @property
-    def list_ipv4(self):
-        return self._list_IPv4
+    def get_ipv4(self) -> {str: (str, str, str)}:
+        """
+        :return: The IPv4 dictionnary.
+        """
+        return self._dict_IPv4
 
     @property
-    def list_ipv6(self):
-        return self._list_IPv6
+    def get_ipv6(self) -> {str: (str, str, str)}:
+        """
+        :return: The IPv6 dictionnary.
+        """
+        return self._dict_IPv6
 
     def reset(self):
         """
         Reset the IPv4 dict and the IPv6 dict.
         """
-        self._list_IPv4 = {}
-        self._list_IPv6 = {}
+        self._dict_IPv4 = {}
+        self._dict_IPv6 = {}
 
     def add_ipv4(self, key: str, value: (str, str, str)):
         """
-        Add an IPv4 entry into the proper dictionnary.
-        Raise a GremlinsListIPv4NetworkError exception if failed.
+        Add an IPv4 entry into the proper dictionnary if not already exists.
+        Raise a GremlinsListIPv4NetworkError exception if key is not an IPv4 CIDR representation and
+        a GremlinsListKeyAlreadyExists exception if the IPv4 entry already exists.
         :param key: '<IPV4_RANGE>'.
         :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
         """
         try:
             # strict=False to force the most corresponding tight network (it could be a host aka /32).
             if isinstance(ipaddress.ip_network(key, strict=False), ipaddress.IPv4Network):
-                self._list_IPv4[key] = value
+                if not self._dict_IPv4.get(key):
+                    self._dict_IPv4[key] = value
+                else:
+                    raise GremlinsListKeyAlreadyExists()
+        except GremlinsListKeyAlreadyExists as kae:
+            raise kae
         # case should never occurs
         except ValueError as ve:
             raise GremlinsListIPv4NetworkError()
 
     def add_ipv6(self, key: str, value: (str, str, str)):
         """
-        Add an IPv6 entry into the proper dictionnary.
-        Raise a GremlinsListIPv6NetworkError exception if failed.
+        Add an IPv6 entry into the proper dictionnary if not already exists.
+        Raise a GremlinsListIPv6NetworkError exception if key is not an IPv6 CIDR representation and
+        a GremlinsListKeyAlreadyExists exception if the IPv6 entry already exists.
         :param key: '<IPV6_RANGE>'.
         :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
         """
         try:
             # strict=False to force the most corresponding tight network (it could be a host aka /128).
             if isinstance(ipaddress.ip_network(key, strict=False), ipaddress.IPv6Network):
-                self._list_IPv6[key] = value
+                if not self._dict_IPv6.get(key):
+                    self._dict_IPv6[key] = value
+                else:
+                    raise GremlinsListKeyAlreadyExists()
+        except GremlinsListKeyAlreadyExists as kae:
+            raise kae
+        # case should never occurs
+        except ValueError as ve:
+            raise GremlinsListIPv6NetworkError()
+
+    def update_ipv4(self, key: str, value: (str, str, str)):
+        """
+        Update IPv4 entry into the proper dictionnary if it exists.
+        Raise a GremlinsListIPv4NetworkError exception if key is not an IPv4 CIDR representation and
+        a GremlinsListKeyNotFound exception if the IPv4 entry already exists.
+        :param key: '<IPV4_RANGE>'.
+        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        """
+
+        try:
+            # strict=False to force the most corresponding tight network (it could be a host aka /32).
+            if isinstance(ipaddress.ip_network(key, strict=False), ipaddress.IPv4Network):
+                if self._dict_IPv4.get(key):
+                    self._dict_IPv4[key] = value
+                else:
+                    raise GremlinsListKeyNotFound()
+        except GremlinsListKeyNotFound as knf:
+            raise knf
+        # case should never occurs
+        except ValueError as ve:
+            raise GremlinsListIPv4NetworkError()
+
+    def update_ipv6(self, key: str, value: (str, str, str)):
+        """
+        Update IPv6 entry into the proper dictionnary if it exists.
+        Raise a GremlinsListIPv6NetworkError exception if key is not an IPv6 CIDR representation and
+        a GremlinsListKeyNotFound exception if the IPv6 entry already exists.
+        :param key: '<IPV6_RANGE>'.
+        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        """
+        try:
+            # strict=False to force the most corresponding tight network (it could be a host aka /128).
+            if isinstance(ipaddress.ip_network(key, strict=False), ipaddress.IPv6Network):
+                if self._dict_IPv6.get(key):
+                    self._dict_IPv6[key] = value
+                else:
+                    raise GremlinsListKeyNotFound()
+        except GremlinsListKeyNotFound as knf:
+            raise knf
         # case should never occurs
         except ValueError as ve:
             raise GremlinsListIPv6NetworkError()

@@ -31,3 +31,5 @@ ERR_LIST_INSTANCE_ALREADY_INIT = "GremlinsList instance is already initiated. \
 Use the get_instance static method to get the initiated instance"
 ERR_LIST_INVALID_CIDR_IPV4_NET = "Invalid CIDR IPv4 network format"
 ERR_LIST_INVALID_CIDR_IPV6_NET = "Invalid CIDR IPv6 network format"
+ERR_LIST_KEY_ALREADY_EXISTS = "Key already exists"
+ERR_LIST_KEY_NOT_FOUND = "Key not found"
