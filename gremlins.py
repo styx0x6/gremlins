@@ -76,7 +76,20 @@ from static.error import ERROR_CODE_NORMAL
 from static.error import ERROR_CODE_VERSION
 from static.error import ERROR_CODE_EXCEPTION
 from static.error import ERR_CRITICAL_VERSION
+# TODO Review error string importation as global (error.) ans integration with i18n
 
+# Import core objects
+from lib.core.list import GremlinsListInstanceInitError
+from lib.core.list import GremlinsListIPv4NetworkError
+from lib.core.list import GremlinsListIPv6NetworkError
+from lib.core.list import GremlinsListKeyAlreadyExists
+from lib.core.list import GremlinsListKeyNotFound
+from lib.core.list import GremlinsList
+
+# Import utils functions
+from lib.core.utils import iprange_to_cidr
+
+# Import thirdparty libraries
 from lib.thirdparty import colorama
 from lib.thirdparty import requests
 
@@ -158,252 +171,224 @@ def write_result(result: bool, suffix: str = ""):
         pass
 
 
-def iprange_to_cidr(ip_range: str = None) -> [str]:
+# TODO Implement the handling of the IPv4 and IPv6 lists
+def gen_ibl_list(handle_ipv4: bool = True, handle_ipv6: bool = True):
     """
-    Format an IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y')
-    to its corresponding CIDR list.
-    :param ip_range: IP range addresses string given as "start to end" format ('x.x.x.x-y.y.y.y').
-    :return: IP range addresses string as its corresponding CIDR string list.
-    """
-    cidr_ip_range_list = []
-    ip_start, ip_end = ip_range.split("-")
-
-    try:
-        cidr_ip_range_list.extend(net.with_prefixlen for net in
-                                  ipaddress.summarize_address_range(ipaddress.IPv4Address(ip_start),
-                                                                    ipaddress.IPv4Address(ip_end)))
-    except ipaddress.AddressValueError as ave:
-        raise ave
-    except ipaddress.NetmaskValueError as nve:
-        raise nve
-    except ValueError as ve:
-        raise ve
-    except TypeError as te:
-        raise te
-    return cidr_ip_range_list
-
-
-# TODO Return a 3-tuple
-def get_ibl_list() -> [(str, str)]:
-    """
-    Get the formatted list from iBlockList. Formatted as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
-    :return: The formatted iBlockList list.
+    Generate the formatted list from iBlockList. Add got entries into the GremlinsList instance.
+    :param handle_ipv4: Generate the IPv4 list. True by default.
+    :param handle_ipv6: Generate the IPv6 list. True by default.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
-    ibl_list = []
-
     for _list in IBL_LISTS:
         write_("Getting list '%s' from iBlockList... " % _list, STDOUT, _f_name)
-        r = requests.get(IBL_HTTP_URL % _list)
+        _r = requests.get(IBL_HTTP_URL % _list)
         # Check HTTP response code
-        if r.status_code == requests.codes.ok:
+        if _r.status_code == requests.codes.ok:
             write_result(OK, " - Downloaded file size: %sMB"
-                         % round((int(r.headers.get('content-length')) / 1024 / 1024), 2) + "\n")
+                         % round((int(_r.headers.get('content-length')) / 1024 / 1024), 2) + "\n")
 
-            working_list = []
+            _working_list = []
             # Decompress, decode as UTF-8 string, and split based on the end of line
-            if r.headers.get('content-type') == 'application/x-gzip':
+            if _r.headers.get('content-type') == 'application/x-gzip':
                 write_("Decompressing and decoding the file...      ", STDOUT, _f_name)
-                working_list = gzip.decompress(r.content).decode(encoding=IBL_LIST_ENC).split("\n")
+                _working_list = gzip.decompress(_r.content).decode(encoding=IBL_LIST_ENC).split("\n")
                 write_result(OK, "\n")
             # case below should never occurs
-            elif r.headers.get('content-type') == 'gzip':
-                write_("Decoding file...                     ", STDOUT, _f_name)
-                working_list = r.content.decode(encoding=IBL_LIST_ENC).split("\n")
+            elif _r.headers.get('content-type') == 'gzip':
+                write_("Decoding the file...                 ", STDOUT, _f_name)
+                _working_list = _r.content.decode(encoding=IBL_LIST_ENC).split("\n")
                 write_result(OK, "\n")
             # if unexpected format is downloaded
             else:
+                write_result(NOK, "\n")
                 write_("Unexpected file format downloaded (%s) when getting list '%s'\n"
-                       % (r.headers.get('content-type'), _list), STDERR, _f_name)
+                       % (_r.headers.get('content-type'), _list), STDERR, _f_name)
                 continue
 
             # Parse for concerned lines
             write_("Parsing '%s' from iBlockList...      " % _list, STDOUT, _f_name)
             # remove the two first header lines from the blocking list
-            working_list = working_list[2:]
-            for _line in working_list:
-                # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
-                if any(word in unicodedata.normalize("NFKD", _line.casefold()) for word in KEYWORDS_LIST):
-                    #  format entries
-                    _name, _ipr = _line.split(IBL_SEP)
-                    _cidr_ip_range_list = []
-                    try:
-                        _cidr_ip_range_list = iprange_to_cidr(_ipr)
-                    except ipaddress.AddressValueError as ave:
-                        write_("AddressValueError raised when trying to format IP range: %s\n" % str(ave), STDERR,
-                               _f_name)
-                    except ipaddress.NetmaskValueError as nve:
-                        write_("NetmaskValueError raised when trying to format IP range: %s\n" % str(nve), STDERR,
-                               _f_name)
-                    except ValueError as ve:
-                        write_("ValueError raised when trying to format IP range: %s\n" % str(ve), STDERR,
-                               _f_name)
-                    except TypeError as te:
-                        write_("TypeError raised when trying to format IP range: %s\n" % str(te), STDERR,
-                               _f_name)
-                    for _cidr_ip_range in _cidr_ip_range_list:
-                        #  clean duplicate entries
-                        if (_name, _cidr_ip_range) not in ibl_list:
-                            ibl_list.extend([(_name, _cidr_ip_range)])
+            _working_list = _working_list[2:]
+            for _line in _working_list:
+                for _word in KEYWORDS_LIST:
+                    # http://stackoverflow.com/questions/319426/how-do-i-do-a-case-insensitive-string-comparison-in-python
+                    if unicodedata.normalize("NFKD", _word) in unicodedata.normalize("NFKD", _line.casefold()):
+                        #  format entries
+                        _name, _ipr = _line.split(IBL_SEP)
+                        _cidr_ip_range_list = []
+                        try:
+                            _cidr_ip_range_list = iprange_to_cidr(_ipr)
+                        except ipaddress.AddressValueError as ave:
+                            write_("AddressValueError raised when trying to format IP range: %s\n" % str(ave), STDERR,
+                                   _f_name)
+                        except ipaddress.NetmaskValueError as nve:
+                            write_("NetmaskValueError raised when trying to format IP range: %s\n" % str(nve), STDERR,
+                                   _f_name)
+                        except ValueError as ve:
+                            write_("ValueError raised when trying to format IP range: %s\n" % str(ve), STDERR, _f_name)
+                        except TypeError as te:
+                            write_("TypeError raised when trying to format IP range: %s\n" % str(te), STDERR, _f_name)
+                        for _cidr_ip_range in _cidr_ip_range_list:
+                            try:
+                                GremlinsList.get_instance().add_ipv4(_cidr_ip_range, (_list, _word, _name))
+                            except GremlinsListKeyAlreadyExists as kae:
+                                write_debug("Entry not added (Reason: %s): %s -> (%s, %s, %s)\n"
+                                            % (str(kae), _cidr_ip_range, _list, _word, _name), STDOUT, _f_name)
+                                continue
             write_result(OK, "\n")
         else:
             # received another response code than 200 OK
-            write_result(NOK, " - Received response code %s\n" % r.status_code)
-
-    return ibl_list
+            write_result(NOK, " - Received response code %s\n" % _r.status_code)
 
 
-# TODO Return a 3-tuple
-def get_ripe_list() -> [(str, str)]:
+# TODO Implement the handling of the IPv4 and IPv6 lists
+def gen_ripe_list(handle_ipv4: bool = True, handle_ipv6: bool = True):
     """
-    Get the formatted list from the RIPE. Formatted as [('RIPE','BAD IPs', 'x.x.x.x/y'),...].
-    :return: The formatted RIPE list.
+    Generate the formatted list from the RIPE. Add got entries into the GremlinsList instance.
+    :param handle_ipv4: Generate the IPv4 list. True by default.
+    :param handle_ipv6: Generate the IPv6 list. True by default.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
-
-    ripe_list = []
 
     for _word in KEYWORDS_LIST:
         write_("Requesting RIPE for '%s'... " % _word, STDOUT, _f_name)
-        r = requests.get(RIPE_HTTP_REST_URL % _word)
-        # Check HTTP response code
-        if r.status_code == requests.codes.ok:
+        _r = requests.get(RIPE_HTTP_REST_URL % _word)
+        if _r.status_code == requests.codes.ok:
             write_result(OK, "\n")
 
-            working_list = []
             # Parse the JSON response
-            if r.headers.get('content-type') == 'application/json':
-                write_("Parsing the JSON response...    ", STDOUT, _f_name)
-                try:
-                    dict_json = r.json()
-                    if dict_json is not None:
-                        print(dict_json['objects'])
-                except ValueError as ve:
-                    write_("ValueError raised when trying to decode JSON: %s\n" % str(ve), STDERR, _f_name)
+            write_("Getting the JSON response...    ", STDOUT, _f_name)
+            if _r.headers.get('content-type') == 'application/json':
                 write_result(OK, "\n")
+                write_("Parsing the JSON structure...   ", STDOUT, _f_name)
+                try:
+                    _dict_json = _r.json()
+                    if _dict_json is not None:
+                        for _obj in _dict_json['objects']['object']:
+                            # TODO this part
+                            print(_obj)
+                        write_result(OK, "\n")
+                    else:
+                        write_result(NOK, "\n")
+                        write_("None JSON object when trying to parse\n", STDERR, _f_name)
+                except ValueError as ve:
+                    write_result(NOK, "\n")
+                    write_("ValueError raised when trying to decode JSON: %s\n" % str(ve), STDERR, _f_name)
             # case below should never occurs
             else:
+                write_result(NOK, "\n")
                 write_("Unexpected content-type response received (%s) when requesting RIPE for '%s'\n"
-                       % (r.headers.get('content-type'), _word), STDERR, _f_name)
-        elif r.status_code == 404:
-            write_("Not Found\n")
+                       % (_r.headers.get('content-type'), _word), STDERR, _f_name)
+        elif _r.status_code == requests.codes.bad_request:
+            write_result(NOK, " - Illegal input - incorrect value in one or more of the parameters\n")
+        elif _r.status_code == requests.codes.not_found:
+            write_("No object(s) found\n")
         else:
-            # received another response code than 200 OK or 404 Not Found
-            write_result(NOK, " - Received response code %s\n" % r.status_code)
-
-    return ripe_list
+            write_result(NOK, " - Received response code %s\n" % _r.status_code)
 
 
-def get_full_list(ibl: bool = True, ripe: bool = True) -> [(str, str, str)]:
+def gen_full_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True):
     """
-    Give a global list generated from the different sources specified in arguments.
-    Formatted as [('bt_level1','BAD IPs', 'x.x.x.x/y'),...].
-    :param ibl: Should use iBlockList as information source. True by default.
-    :param ripe: Should use the RIPE as information source. True by default.
-    :return: The global list.
+    Generate the global list from the sources specified in arguments. Thus, call the proper functions.
+    :param query_ibl: Use iBlockList databse as information source. True by default.
+    :param query_ripe: Use the RIPE database as information source. True by default.
+    :param handle_ipv4: Generate the IPv4 list. True by default.
+    :param handle_ipv6: Generate the IPv6 list. True by default.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
-    lists = []
-
-    if ibl:
-        lists.extend(get_ibl_list())
-        write_("-> List from iBlockList generated.\n", STDOUT, _f_name)
-    if ripe:
-        lists.extend(get_ripe_list())
-        write_("-> List from the RIPE generated.\n", STDOUT, _f_name)
-
-    return lists
+    if query_ibl:
+        # TODO Manage the case if an error has occured?
+        gen_ibl_list(handle_ipv4, handle_ipv6)
+        write_(" -> List from iBlockList generated.\n", STDOUT, _f_name)
+    if query_ripe:
+        # TODO Manage the cas eif an error has occured?
+        gen_ripe_list(handle_ipv4, handle_ipv6)
+        write_(" -> List from the RIPE generated.\n", STDOUT, _f_name)
 
 
-def cmd_list(ibl: bool = True, ripe: bool = True):
+def cmd_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True):
     """
-    Run the 'list' command. Print each line in CSV format "<SOURCE>,<NAME>,<CIDR_IP_RANGE>".
-    :param ibl: Should use iBlockList as information source. True by default.
-    :param ripe: Should use the RIPE as information source. True by default.
+    Run the 'list' command. Print each line in CSV format "<CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>".
+    :param query_ibl: Use iBlockList databse as information source. True by default.
+    :param query_ripe: Use the RIPE database as information source. True by default.
+    :param handle_ipv4: Generate the IPv4 list. True by default.
+    :param handle_ipv6: Generate the IPv6 list. True by default.
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
-    full_list = get_full_list(ibl, ripe)
+    gen_full_list(query_ibl, query_ripe, handle_ipv4, handle_ipv6)
 
     write_("Printing the full list...\n\n", STDOUT, _f_name)
-    # TODO To use with 3-tuple implementation
-    """
-    for (source, name, cidr_ip_range) in full_list:
-        write_(source + "," + name + "," + cidr_ip_range + "\n", is_raw_data=True)
-    """
-    # TODO To delete after 3-tuple implementation
-    for (name, cidr_ip_range) in full_list:
-        write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
+
+    # TODO Get the dict as a string representative as <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
+    for _entry in GremlinsList.get_instance().get_ipv4():
+        # TODO write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
+        print(_entry)
+    # TODO Get the dict as a string representative as <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
+    for _entry in GremlinsList.get_instance().get_ipv6():
+        # TODO write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
+        print(_entry)
 
 
-# TODO Iptable commands to be finished + Doc + Help
-def cmd_iptables(ibl: bool = True, ripe: bool = True, show_list_only: bool = False, host: str = None,
-                 port: int = DEFAULT_SSH_PORT, user: str = None, password: str = None, save: bool = True):
+# TODO Docstring (incl. raises)
+def cmd_iptables(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
+                 show_list_only: bool = False, host: str = None, port: int = DEFAULT_SSH_PORT, user: str = None,
+                 password: str = None, save: bool = True):
     """
     Run the 'iptables' command.
-    :param ibl: Should use iBlockList as information source. True by default.
-    :param ripe: Should use the RIPE as information source. True by default.
-    :param show_list_only:
-    :param host:
-    :param port:
-    :param user:
-    :param password:
-    :param save:
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
+    # TODO iptables implementation to finish
+
     shell_commands_list = []
-    full_list = get_full_list(ibl, ripe)
+    gen_full_list(ibl, ripe)
 
     # TODO generate iptables shell commands
     write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)
 
 
-# TODO To be implemented
-# TODO Args to review
-def cmd_fbxos(ibl=True, ripe=True):
+# TODO To be implemented + Docstring (incl. raises)
+def cmd_fbxos(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
+              host: str = DEFAULT_FBX_HOST, port: int = DEFAULT_FBX_HTTPS_PORT, user: str = None, password: str = None):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
-# TODO UTM9 to be finished + Doc + Help
-def cmd_utm9(ibl=True, ripe=True, host=None, port=DEFAULT_UTM9_HTTPS_PORT, token=None, user=None, password=None,
-             log=True):
+# TODO Docstring (incl. raises)
+def cmd_utm9(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
+             host: str = None, port: int = DEFAULT_UTM9_HTTPS_PORT, token: str = None, user: str = None,
+             password: str = None, log: bool = True):
     """
     Run the 'utm9' command.
-    :param ibl: Should use iBlockList as information source. True by default.
-    :param ripe: Should use the RIPE as information source. True by default.
-    :param host:
-    :param port:
-    :param token:
-    :param user:
-    :param password:
-    :param log:
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
+    # TODO UTM9 implementation to finish
     pass
 
 
-# TODO To be implemented
-# TODO Args to review
-def cmd_pfsense(ibl=True, ripe=True):
+# TODO To be implemented + Docstring (incl. raises)
+def cmd_pfsense(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
+                host: str = None, port: int = DEFAULT_PFSENSE_HTTPS_PORT, user: str = None, password: str = None,
+                log: bool = True):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
 
 
-# TODO To be implemented
-# TODO Args to review
-def cmd_opnsense(ibl=True, ripe=True):
+# TODO To be implemented + Docstring (incl. raises)
+def cmd_opnsense(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
+                 host: str = None, port: int = DEFAULT_OPNSENSE_HTTPS_PORT, user: str = None, password: str = None,
+                 log: bool = True):
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
     pass
@@ -413,7 +398,7 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
     """
     Initialize and parse arguments. Arguments helps are set in settings.
     :param dest: Variable name to store the choosen command. 'cmd' by default.
-    :param add_help: Choose if the parsers have to add help options and associated texts, False by default because they are manually handled.
+    :param add_help: If the parsers have to add options' helps, False by default because they are manually handled.
     :return: The arguments parser.
     """
     parser = argparse.ArgumentParser(add_help=add_help)
@@ -437,6 +422,16 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
                         )
 
     # Options arguments
+    parser.add_argument('-D4', '--disable-ipv4',
+                        dest='handleIPv4',
+                        action='store_false',
+                        default=True
+                        )
+    parser.add_argument('-D6', '--disable-ipv6',
+                        dest='handleIPv6',
+                        action='store_false',
+                        default=True
+                        )
     parser.add_argument('-Dr', '--disable-ripe',
                         dest='queryRIPE',
                         action='store_false',
@@ -538,11 +533,6 @@ def init_args(dest: str = 'cmd', add_help: bool = False):
                               dest='password',
                               action='store',
                               default=None
-                              )
-    parser_fbxos.add_argument('-s', '--secure',
-                              dest='secure',
-                              action='store_true',
-                              default=False
                               )
 
     # Sophos UTM9 command arguments
@@ -687,50 +677,51 @@ def main():
                                   colorama.Style.BRIGHT + colorama.Fore.WHITE,
                                   colorama.Style.RESET_ALL
                                   ) if args.colorizeOutput else ('', '', '', '')))
-            # Let's go running
-            if args.showHelp:
+            # Display help if asked or force it if any disallowed args usage cases occur
+            if args.showHelp or (not args.handleIPv4 and not args.handleIPv6):
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
+            # Let's go running
             elif args.cmd == CMD_LIST:
                 if args.showListHelp:
                     write_(HELP_LIST % (BASENAME_PROG, CMD_LIST))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_LIST, STDOUT, _f_name)
-                    cmd_list(args.queryiBlockList, args.queryRIPE)
+                    cmd_list(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6)
             elif args.cmd == CMD_IPTABLES:
                 if args.showIptablesHelp:
                     write_(HELP_IPTABLES % (BASENAME_PROG, CMD_IPTABLES))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_IPTABLES, STDOUT, _f_name)
-                    cmd_iptables(args.queryiBlockList, args.queryRIPE, args.showListOnly, args.host, args.port,
-                                 args.user, args.password, args.save)
+                    cmd_iptables(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6,
+                                 args.showListOnly, args.host, args.port, args.user, args.password, args.save)
             elif args.cmd == CMD_FBXOS:
                 if args.showFbxOSHelp:
                     write_(HELP_FBXOS % (BASENAME_PROG, CMD_FBXOS))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_FBXOS, STDOUT, _f_name)
-                    # TODO Args to review
-                    cmd_fbxos(args.queryiBlockList, args.queryRIPE)
+                    cmd_fbxos(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6,
+                              args.host, args.port, args.user, args.password)
             elif args.cmd == CMD_UTM9:
                 if args.showUTM9Help:
                     write_(HELP_UTM9 % (BASENAME_PROG, CMD_UTM9))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_UTM9, STDOUT, _f_name)
-                    cmd_utm9(args.queryiBlockList, args.queryRIPE, args.host, args.port, args.token, args.user,
-                             args.password, args.log)
+                    cmd_utm9(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6, args.host,
+                             args.port, args.token, args.user, args.password, args.log)
             elif args.cmd == CMD_PFSENSE:
                 if args.showpfSenseHelp:
                     write_(HELP_PFSENSE % (BASENAME_PROG, CMD_PFSENSE))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_PFSENSE, STDOUT, _f_name)
-                    # TODO Args to review
-                    cmd_pfsense(args.queryiBlockList, args.queryRIPE)
+                    cmd_pfsense(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6,
+                                args.host, args.port, args.user, args.password, args.log)
             elif args.cmd == CMD_OPNSENSE:
                 if args.showOPNsenseHelp:
                     write_(HELP_OPNSENSE % (BASENAME_PROG, CMD_OPNSENSE))
                 else:
                     write_debug("Started executing the cmd: %s\n" % CMD_OPNSENSE, STDOUT, _f_name)
-                    # TODO Args to review
-                    cmd_opnsense(args.queryiBlockList, args.queryRIPE)
+                    cmd_opnsense(args.queryiBlockList, args.queryRIPE, args.handleIPv4, args.handleIPv6,
+                                 args.host, args.port, args.user, args.password, args.log)
             else:  # will also match CMD_HELP
                 write_(HELP % (BASENAME_PROG, BASENAME_PROG))
     except KeyboardInterrupt as ki:

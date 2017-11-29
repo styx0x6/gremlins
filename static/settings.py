@@ -114,80 +114,139 @@ Author: %s, License: %s
 """ % ("%s", "%s", "%s", VERSION, "%s", DESCRIPTION_2, HOME_PAGE, ISSUES_PAGE, AUTHOR, LICENSE_SHORT)
 
 """
-Help definition
+Help definitions
 """
 HELP = """
-Usage: %s [-v | -h | -d] [-c, -Dc] [-Dr, -Di] <command> [<command_options...>]
+Usage: %s [-v | -h] [-d] [-c] [-Dc] [-De] [-D4 | -D6] [-Dr, -Di] <command> [<command_options...>]
 
 Options:
 
   -v, --version                 Show version and exit
   -h, --help                    Show this help message
-  -d, --debug                   Enable verbose outputs
 
+  -d, --debug                   Enable verbose outputs
   -c, --clean-output            Do not show running output, keep only some commands results
   -Dc, --disable-coloring       Disable terminal coloring
   -De, --disable-error          Disable error messages
+
+  -D4, --disable-ipv4           Disable IPv4 (TO BE IMPLEMENTED)
+  -D6, --disable-ipv6           Disable IPv6 (TO BE IMPLEMENTED)
 
   -Dr, --disable-ripe           Disable RIPE database searching requests
   -Di, --disable-iblocklist     Disable iBlockList download requests
 
 Commands:
 
-  list                          Show the CIDR IP addresses list.
+  list                          Show the CIDR IP addresses list
   iptables                      Push iptables blocking ruleset
-  fbxos (TBI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+, APIv4)
-  utm9                          Push Sophos UTM 9 Firewall blocking ruleset (v9.408+)
-  pfsense (TBI)                 Push NetGate pfSense firewall blocking ruleset
-  opnsense (TBI)                Push Deciso OPNsense Firewall blocking ruleset
+  fbxos (NYI)                   Push FreeboxOS Download Blacklist blocking ruleset (v3+, APIv4)
+  utm9                          Push Sophos UTM 9 firewall blocking ruleset (v9.408+)
+  pfsense (NYI)                 Push NetGate pfSense firewall blocking ruleset
+  opnsense (NYI)                Push Deciso OPNsense firewall blocking ruleset
 
-  For further details about commands, use: %s <command> -h
+  For further details about commands, use: %s <command> -h.
+
 """
 
 HELP_LIST = """
 Usage: %s %s [-h]
 
-Show the CIDR IP addresses list. Print each line in CSV format "<NAME>,<CIDR_IP_RANGE>".
+Show the CIDR IP addresses list. Print each line in CSV format:
+
+  <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
+
+    where <VERSION> is '4' or '6'
+    where <SOURCE> is 'RIPE','bt_level1'...
 
 Options:
 
   -h, --help                    Show this help message
+
 """
 
-# TODO Detail args and add long args
 HELP_IPTABLES = """
 Usage: %s %s [-h] [-l] [-H <host> [-P <port>] [-u <user> -p <password>] [-Ds]]
 
-Push iptables blocking ruleset
+Push iptables blocking ruleset using CLI via SSH.
+
+Options:
+
+  -h, --help                    Show this help message
+  -l, --list                    List only the iptables commands, will not push them
+  -H, --host                    The remote server hostname or IP address
+  -P, --port                    The remote server SSH port, '22' by default
+  -u, --user                    The username used to connect and push commands on the remote server
+  -p, --password                The user's password to connect on the remote server
+  -Ds, --do-not-save            Will not save the pushed commands, thus configuration will not be persistent
+
 """
 
-# TODO Detail args and add long args
-# TODO TO BE IMPLEMENTED - Say that default internal mafreebox.freebox.fr:443
 HELP_FBXOS = """
-Usage: %s %s [-h] [-H <host> [-P <port>] -u <user> -p <password>] [-s]
+Usage: %s %s [-h] [-H <host> [-P <port>] -u <user> -p <password>]
 
-Push FreeboxOS Download Blacklist blocking ruleset (Freebox Revolution v3) - TO BE IMPLEMENTED
+/!\ NOT YET IMPLEMENTED /!\\
+
+Push FreeboxOS Download Blacklist blocking ruleset using the REST API (Freebox Revolution v3+, APIv4).
+
+Options:
+
+  -h, --help                    Show this help message
+  -H, --host                    The remote Freebox hostname or IP address, 'mafreebox.freebox.fr' by default
+  -P, --port                    The remote Freebox HTTPS port, '443' by default
+  -u, --user                    The authentication username to get the token challenge
+  -p, --password                The user's password to get the token challenge
+
 """
 
-# TODO Detail args and add long args
 HELP_UTM9 = """
 Usage: %s %s [-h] [-H <host> [-P <port>] [-t <REST token ID>] [-u <user> -p <password>] [-Dl]]
 
-Push Sophos UTM 9 Firewall blocking ruleset (v9.408+)
+Push Sophos UTM 9 firewall blocking ruleset using the REST API (v9.408+).
+
+Options:
+
+  -h, --help                    Show this help message
+  -H, --host                    The remote Sophos UTM 9 firewall hostname or IP address
+  -P, --port                    The remote Sophos UTM 9 firewall HTTPS port, '4444' by default
+  -t, --token                   The REST authentication token ID, if do not use user/password credentials
+  -u, --user                    The authentication username on the REST service, if do not use a token ID
+  -p, --password                The user's password to be authenticated on the REST service with credentials
+  -Dl, --do-not-log             Set the generated rules with no logging
+
 """
 
-# TODO Detail args and add long args
-# TODO TO BE IMPLEMENTED
 HELP_PFSENSE = """
 Usage: %s %s [-h] [-H <host> [-P <port>] [-u <user> -p <password>] [-Dl]]
 
-Push pfSense firewall blocking ruleset - TO BE IMPLEMENTED
+/!\ NOT YET IMPLEMENTED /!\\
+
+Push pfSense firewall blocking ruleset using the REST API.
+
+Options:
+
+  -h, --help                    Show this help message
+  -H, --host                    The remote pfSense firewall hostname or IP address
+  -P, --port                    The remote pfSense firewall HTTPS port, '443' by default
+  -u, --user                    The authentication username to get the token challenge
+  -p, --password                The user's password to get the token challenge
+  -Dl, --do-not-log             Set the generated rules with no logging
+
 """
 
-# TODO Detail args and add long args
-# TODO TO BE IMPLEMENTED
 HELP_OPNSENSE = """
 Usage: %s %s [-h] [-H <host> [-P <port>] [-u <user> -p <password>] [-Dl]]
 
-Push OPNsense Firewall blocking ruleset - TO BE IMPLEMENTED
+/!\ NOT YET IMPLEMENTED /!\\
+
+Push OPNsense firewall blocking ruleset using the REST API.
+
+Options:
+
+  -h, --help                    Show this help message
+  -H, --host                    The remote OPNsense firewall hostname or IP address
+  -P, --port                    The remote OPNsense firewall HTTPS port, '443' by default
+  -u, --user                    The authentication username to get the token challenge
+  -p, --password                The user's password to get the token challenge
+  -Dl, --do-not-log             Set the generated rules with no logging
+
 """
