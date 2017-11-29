@@ -61,13 +61,13 @@ class GremlinsList:
     Defines an IPv4 dict and an IPv6 dict in which objects are reprensented as below.
     GremlinsList is a Singleton.
     For IPv4:
-        Type:       key: str -> (str, str, str)
-        Usage:      '<IPV4_RANGE>': ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>')
-        Example:    '1.2.3.192/27': ('RIPE', 'world company', 'WLD CPY LTD')
+        Type:       key: str -> (str, str, str, str)
+        Usage:      '<CIDR_IP_RANGE>': ('<VERSION>', '<SOURCE>', '<MATCHED_KEYWORD>', '<NAME>')
+        Example:    '1.2.3.192/27': ('4', 'RIPE', 'world company', 'WLD CPY LTD')
     For IPv6:
-        Type:       key: str -> (str, str, str)
-        Usage:      '<IPV6_RANGE>': ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>')
-        Example:    '2001:db00::0/24': ('RIPE', 'world company', 'WLD CPY LTD')
+        Type:       key: str -> (str, str, str, str)
+        Usage:      '<CIDR_IP_RANGE>': ('<VERSION>', '<SOURCE>', '<MATCHED_KEYWORD>', '<NAME>')
+        Example:    '2001:db00::0/24': ('6', 'RIPE', 'world company', 'WLD CPY LTD')
     """
 
     __instance = None
@@ -91,14 +91,14 @@ class GremlinsList:
                (len(self._dict_IPv4), len(self._dict_IPv6))
 
     @property
-    def get_ipv4(self) -> {str: (str, str, str)}:
+    def get_ipv4(self) -> {str: (str, str, str, str)}:
         """
         :return: The IPv4 dictionnary.
         """
         return self._dict_IPv4
 
     @property
-    def get_ipv6(self) -> {str: (str, str, str)}:
+    def get_ipv6(self) -> {str: (str, str, str, str)}:
         """
         :return: The IPv6 dictionnary.
         """
@@ -111,13 +111,13 @@ class GremlinsList:
         self._dict_IPv4 = {}
         self._dict_IPv6 = {}
 
-    def add_ipv4(self, key: str, value: (str, str, str)):
+    def add_ipv4(self, key: str, value: (str, str, str, str)):
         """
         Add an IPv4 entry into the proper dictionnary if not already exists.
         Raise a GremlinsListIPv4NetworkError exception if key is not an IPv4 CIDR representation and
         a GremlinsListKeyAlreadyExists exception if the IPv4 entry already exists.
-        :param key: '<IPV4_RANGE>'.
-        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        :param key: '<CIDR_IP_RANGE>'.
+        :param value: ('<VERSION>', <SOURCE>', '<MATCHED_KEYWORD>', '<NAME>').
         """
         try:
             # strict=False to force the most corresponding tight network (it could be a host aka /32).
@@ -132,13 +132,13 @@ class GremlinsList:
         except ValueError as ve:
             raise GremlinsListIPv4NetworkError()
 
-    def add_ipv6(self, key: str, value: (str, str, str)):
+    def add_ipv6(self, key: str, value: (str, str, str, str)):
         """
         Add an IPv6 entry into the proper dictionnary if not already exists.
         Raise a GremlinsListIPv6NetworkError exception if key is not an IPv6 CIDR representation and
         a GremlinsListKeyAlreadyExists exception if the IPv6 entry already exists.
-        :param key: '<IPV6_RANGE>'.
-        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        :param key: '<CIDR_IP_RANGE>'.
+        :param value: ('<VERSION>', '<SOURCE>', '<MATCHED_KEYWORD>', '<NAME>').
         """
         try:
             # strict=False to force the most corresponding tight network (it could be a host aka /128).
@@ -153,13 +153,13 @@ class GremlinsList:
         except ValueError as ve:
             raise GremlinsListIPv6NetworkError()
 
-    def update_ipv4(self, key: str, value: (str, str, str)):
+    def update_ipv4(self, key: str, value: (str, str, str, str)):
         """
         Update IPv4 entry into the proper dictionnary if it exists.
         Raise a GremlinsListIPv4NetworkError exception if key is not an IPv4 CIDR representation and
         a GremlinsListKeyNotFound exception if the IPv4 entry already exists.
-        :param key: '<IPV4_RANGE>'.
-        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        :param key: '<CIDR_IP_RANGE>'.
+        :param value: ('<VERSION>', '<SOURCE>', '<MATCHED_KEYWORD>', '<NAME>').
         """
 
         try:
@@ -175,13 +175,13 @@ class GremlinsList:
         except ValueError as ve:
             raise GremlinsListIPv4NetworkError()
 
-    def update_ipv6(self, key: str, value: (str, str, str)):
+    def update_ipv6(self, key: str, value: (str, str, str, str)):
         """
         Update IPv6 entry into the proper dictionnary if it exists.
         Raise a GremlinsListIPv6NetworkError exception if key is not an IPv6 CIDR representation and
         a GremlinsListKeyNotFound exception if the IPv6 entry already exists.
-        :param key: '<IPV6_RANGE>'.
-        :param value: ('<SOURCE>', '<SEARCHED_KEYWORD>', '<NAME>').
+        :param key: '<CIDR_IP_RANGE>'.
+        :param value: ('<VERSION>', '<SOURCE>', '<MATCHED_KEYWORD>', '<NAME>').
         """
         try:
             # strict=False to force the most corresponding tight network (it could be a host aka /128).
