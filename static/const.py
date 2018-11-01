@@ -30,6 +30,8 @@ STR_NOK = "NOK"
 STR_ERR = "[ERR]"
 STR_DEBUG = "[%s] "  # debug information shall be provided here
 
+STR_UNDEFINED = ''
+
 STR_IPV4_VER = 4
 STR_IPV6_VER = 6
 
