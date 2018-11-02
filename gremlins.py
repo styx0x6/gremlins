@@ -343,21 +343,36 @@ def cmd_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool 
                    is_raw_data=True)
 
 
-# TODO Docstring (incl. raises)
 def cmd_iptables(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
                  show_list_only: bool = False, host: str = None, port: int = DEFAULT_SSH_PORT, user: str = None,
                  password: str = None, save: bool = True):
     """
-    Run the 'iptables' command.
+    Run the 'iptables' command. Generate the iptables and display them or apply them to the specified host.
+    :param query_ibl: Use iBlockList databse as information source. True by default.
+    :param query_ripe: Use the RIPE database as information source. True by default.
+    :param handle_ipv4: Generate the IPv4 list. True by default.
+    :param handle_ipv6: Generate the IPv6 list. True by default.
+    :param show_list_only: Show the list of commands instead of applying it. False by default.
+    :param host: Host on which the iptables rules will be applied.
+    :param port: SSH port on which the script will connect on. DEFAULT_SSH_PORT by default.
+    :param user: User used to connect on the host.
+    :param password: # TODO prompt for password
+    :param save:
+    :return:
     """
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
     gen_full_list(query_ibl, query_ripe, handle_ipv4, handle_ipv6)
 
-    # TODO iptables implementation to finish
-
     shell_commands_list = []
+
+    if show_list_only:
+        write_("Printing the iptables commands...\n\n", STDOUT, _f_name)
+
+        # TODO Print it
+    else:
+        pass
 
     # TODO generate iptables shell commands
     write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)

@@ -1,4 +1,5 @@
-[![Python 3.3+](https://img.shields.io/badge/Python-3.3+-blue.svg)](https://www.python.org/)
+[![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=master)](https://travis-ci.org/styx0x6/gremlins)
+[![Python 3.4+](https://img.shields.io/badge/Python-3.4+-blue.svg)](https://www.python.org/)
 [![License AGPL-3.0+](https://img.shields.io/badge/License-AGPL--3.0+-blue.svg)](https://raw.githubusercontent.com/styx0x6/gremlins/master/LICENSE)
 
 # Gremlins
@@ -86,6 +87,11 @@ References
 Some interesting links:
 
 * [http://seclists.org/fulldisclosure/2011/May/434](http://seclists.org/fulldisclosure/2011/May/434)
+
+Contributing
+----
+
+[![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=dev)](https://travis-ci.org/styx0x6/gremlins)
 
 Third-Party Librairies
 ----

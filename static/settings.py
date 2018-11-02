@@ -32,7 +32,7 @@ COPYRIGHT = "Copyright (C) 2017 @styx0x6"
 
 VERSION = "0.1.0"
 VERSION_STRING = "%s/%s" % (PROJECT_TITLE, VERSION)
-VALID_PYTHON_VERSION = "3.3"
+VALID_PYTHON_VERSION = "3.4"
 
 AUTHOR = "@styx0x6"
 AUTHOR_PAGE = "https://github.com/styx0x6"
@@ -79,6 +79,10 @@ RIPE_JSON_INETNUM = 'inetnum'
 IBL_LISTS = ['bt_level1', 'bt_level2']
 KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "trident medi guard",
                  "trident media guard"]
+
+# iptables commands
+IPTABLES_DROP = ""
+IPTABLES_SAVE = ""
 
 """
 Gremlins outputs settings
