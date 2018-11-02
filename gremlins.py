@@ -25,6 +25,17 @@ import gzip
 import unicodedata
 import ipaddress
 
+# Import constants
+from static.const import STDOUT
+from static.const import STDERR
+from static.const import OK
+from static.const import NOK
+from static.const import STR_OK
+from static.const import STR_NOK
+from static.const import STR_ERR
+from static.const import STR_DEBUG
+from static.const import STR_CSV
+
 # Import settings
 from static.settings import PROJECT_NAME
 from static.settings import VERSION_STRING
@@ -50,14 +61,6 @@ from static.settings import RIPE_JSON_NAME_LIST
 from static.settings import RIPE_JSON_INETNUM
 from static.settings import IBL_LISTS
 from static.settings import KEYWORDS_LIST
-from static.settings import STDOUT
-from static.settings import STDERR
-from static.settings import OK
-from static.settings import NOK
-from static.settings import STR_OK
-from static.settings import STR_NOK
-from static.settings import STR_ERR
-from static.settings import STR_DEBUG
 from static.settings import DEFAULT_COLORIZE_OUTPUT
 from static.settings import DEFAULT_SHOW_RUNNING_OUTPUT
 from static.settings import DEFAULT_SHOW_DEBUG_INFO
@@ -79,12 +82,9 @@ from static.error import ERR_CRITICAL_VERSION
 # TODO Review error string importation as global (error.) ans integration with i18n
 
 # Import core objects
-from lib.core.list import GremlinsListInstanceInitError
-from lib.core.list import GremlinsListIPv4NetworkError
-from lib.core.list import GremlinsListIPv6NetworkError
-from lib.core.list import GremlinsListKeyAlreadyExists
-from lib.core.list import GremlinsListKeyNotFound
-from lib.core.list import GremlinsList
+from lib.core.db import GDBConst
+from lib.core.db import GremlinsDB
+from lib.core.db import GremlinsDBError
 
 # Import utils functions
 from lib.core.utils import iprange_to_cidr
@@ -232,10 +232,11 @@ def gen_ibl_list(handle_ipv4: bool = True, handle_ipv6: bool = True):
                             write_("TypeError raised when trying to format IP range: %s\n" % str(te), STDERR, _f_name)
                         for _cidr_ip_range in _cidr_ip_range_list:
                             try:
-                                GremlinsList.get_instance().add_ipv4(_cidr_ip_range, (_list, _word, _name))
-                            except GremlinsListKeyAlreadyExists as kae:
-                                write_debug("Entry not added (Reason: %s): %s -> (%s, %s, %s)\n"
-                                            % (str(kae), _cidr_ip_range, _list, _word, _name), STDOUT, _f_name)
+                                GremlinsDB.get_instance().add_ipv4(_cidr_ip_range, _list, _word, _name)
+                            except GremlinsDBError as err:
+                                write_debug("Entry not added (Reason: %s (%s)): %s -> (%s, %s, %s)\n"
+                                            % (str(err), str(type(err)), _cidr_ip_range, _list, _word, _name), STDOUT,
+                                            _f_name)
                                 continue
             write_result(OK, "\n")
         else:
@@ -306,14 +307,15 @@ def gen_full_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: 
         gen_ibl_list(handle_ipv4, handle_ipv6)
         write_(" -> List from iBlockList generated.\n", STDOUT, _f_name)
     if query_ripe:
-        # TODO Manage the cas eif an error has occured?
+        # TODO Manage the case if an error has occured?
         gen_ripe_list(handle_ipv4, handle_ipv6)
         write_(" -> List from the RIPE generated.\n", STDOUT, _f_name)
 
 
 def cmd_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True):
     """
-    Run the 'list' command. Print each line in CSV format "<CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>".
+    Run the 'list' command. Print each line in a CSV format:
+        <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
     :param query_ibl: Use iBlockList databse as information source. True by default.
     :param query_ripe: Use the RIPE database as information source. True by default.
     :param handle_ipv4: Generate the IPv4 list. True by default.
@@ -326,14 +328,19 @@ def cmd_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool 
 
     write_("Printing the full list...\n\n", STDOUT, _f_name)
 
-    # TODO Get the dict as a string representative as <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
-    for _entry in GremlinsList.get_instance().get_ipv4():
-        # TODO write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
-        print(_entry)
-    # TODO Get the dict as a string representative as <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
-    for _entry in GremlinsList.get_instance().get_ipv6():
-        # TODO write_(name + "," + cidr_ip_range + "\n", is_raw_data=True)
-        print(_entry)
+    if handle_ipv4:
+        for _key, _data in GremlinsDB.get_instance().get_all_ipv4().items():
+            write_(_data[int(GDBConst.CIR)] + STR_CSV + str(_data[int(GDBConst.VERSION)]) + STR_CSV +
+                   _data[int(GDBConst.SOURCE)] + STR_CSV + _data[int(GDBConst.MATCHED_KEYWORD)] + STR_CSV +
+                   _data[int(GDBConst.NAME)] + "\n",
+                   is_raw_data=True)
+
+    if handle_ipv6:
+        for _key, _data in GremlinsDB.get_instance().get_all_ipv6().items():
+            write_(_data[int(GDBConst.CIR)] + STR_CSV + str(_data[int(GDBConst.VERSION)]) + STR_CSV +
+                   _data[int(GDBConst.SOURCE)] + STR_CSV + _data[int(GDBConst.MATCHED_KEYWORD)] + STR_CSV +
+                   _data[int(GDBConst.NAME)] + "\n",
+                   is_raw_data=True)
 
 
 # TODO Docstring (incl. raises)
@@ -346,10 +353,11 @@ def cmd_iptables(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: b
     # https://stackoverflow.com/questions/5067604/determine-function-name-from-within-that-function-without-using-traceback
     _f_name = inspect.currentframe().f_code.co_name  # function name for debug purpose
 
+    gen_full_list(query_ibl, query_ripe, handle_ipv4, handle_ipv6)
+
     # TODO iptables implementation to finish
 
     shell_commands_list = []
-    gen_full_list(ibl, ripe)
 
     # TODO generate iptables shell commands
     write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)

@@ -83,18 +83,6 @@ KEYWORDS_LIST = ["hadopi", "tmg", "trident mediguard", "trident mediaguard", "tr
 """
 Gremlins outputs settings
 """
-# Static variables
-STDOUT = 0  # defines stdout within Gremlins
-STDERR = 1  # defines stderr within Gremlins
-OK = True
-NOK = False
-
-# Static strings definition
-STR_OK = "OK!"
-STR_NOK = "NOK"
-STR_ERR = "[ERR]"
-STR_DEBUG = "[%s] "  # debug information shall be provided here
-
 # Default parameters for outputs
 DEFAULT_COLORIZE_OUTPUT = True  # by default, output is colorized
 DEFAULT_SHOW_RUNNING_OUTPUT = True  # by default, running output messages are shown
