@@ -2,12 +2,12 @@
 
 ## Features
 
-### Milestone version 1.0.0
+### Milestone 1
 
 * Implement **iptables** support.
 * Implement **Sophos UTM 9** support.
 
-### Milestone version 1.1.0
+### Milestone 2
 
 * Implement **FreeboxOS Download** support.
 
@@ -24,12 +24,7 @@
 
 # Changelog
 
-## Version 0.y.z (*Coming soon...*)
-
-* Full RIPE database support.
-* IPv6 full support.
-
-## Version 0.1.0 (*Coming soon...*)
+## Version 0.1.0 (2018-11-03)
 
 First release with standard features:
 
@@ -38,9 +33,9 @@ First release with standard features:
 * Build under AGPL-3.0+ license.
 * Core structure ready arguments parsing and next features.
 * iBlockList support.
-* Manage objects into an internal memory database.
 * Format and manage IPs as CIDR.
 * Display IPs in CSV format.
+* Manage objects into an internal memory database.
 * Code ready for a full IPv4 and IPv6 support. IPv6 not yet fully supported.
 * Properly manage stdout/stderr and colorization.
 * Handling custom exceptions and error messages properly.

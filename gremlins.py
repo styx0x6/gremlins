@@ -343,6 +343,7 @@ def cmd_list(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool 
                    is_raw_data=True)
 
 
+# TODO Finish implementation
 def cmd_iptables(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: bool = True, handle_ipv6: bool = True,
                  show_list_only: bool = False, host: str = None, port: int = DEFAULT_SSH_PORT, user: str = None,
                  password: str = None, save: bool = True):
@@ -365,17 +366,12 @@ def cmd_iptables(query_ibl: bool = True, query_ripe: bool = True, handle_ipv4: b
 
     gen_full_list(query_ibl, query_ripe, handle_ipv4, handle_ipv6)
 
-    shell_commands_list = []
-
     if show_list_only:
         write_("Printing the iptables commands...\n\n", STDOUT, _f_name)
 
-        # TODO Print it
+        write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)
     else:
         pass
-
-    # TODO generate iptables shell commands
-    write_("IPTABLES COMMAND TO BE DONE\n", STDOUT, _f_name)
 
 
 # TODO To be implemented + Docstring (incl. raises)
