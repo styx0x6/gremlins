@@ -17,37 +17,4 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .settings import CHARSET, SERVER_DEFAULT_IP, SERVER_DEFAULT_PORT
-
-from lib.thirdparty import paramiko
-
-
-class IptablesSSHClient:
-    def __init__(self, ip=SERVER_DEFAULT_IP, port=SERVER_DEFAULT_PORT, ssh_client=None):
-        self.__ip = ip
-        self.__port = port
-        self.__ssh_client = ssh_client
-
-    @property
-    def ip(self):
-        return self.__ip
-
-    @property
-    def port(self):
-        return self.__port
-
-    @property
-    def ssh_client(self):
-        return self.__ssh_client
-
-    @ip.setter
-    def ip(self, ip):
-        self.__ip = ip
-
-    @port.setter
-    def port(self, port):
-        self.__port = port
-
-    @ssh_client.setter
-    def ssh_client(self, ssh_client):
-        self.__ssh_client = ssh_client
+pass
