@@ -24,6 +24,10 @@
 
 # Changelog
 
+## Version 0.1.1 (2018-11-03)
+
+* Removed Python 3.7 from Travis CI build validation.
+
 ## Version 0.1.0 (2018-11-03)
 
 First release with standard features:
