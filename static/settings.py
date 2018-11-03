@@ -30,7 +30,7 @@ LICENSE = "GNU Affero General Public License (AGPL-3.0+)"
 LICENSE_SHORT = "AGPL-3.0+"
 COPYRIGHT = "Copyright (C) 2017 @styx0x6"
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 VERSION_STRING = "%s/%s" % (PROJECT_TITLE, VERSION)
 VALID_PYTHON_VERSION = "3.4"
 
