@@ -34,7 +34,7 @@ Also the script can simply generate the list to block in CSV format:
 
 *Workflow:*
 
-1. iBlockList and RIPE database requests based on predefined keywords in order to not block all the internet.
+1. **iBlockList** and **RIPE** database requests based on predefined keywords in order to not block all the internet.
 2. Format IPs in a standard way.
 3. Do what you want: list IPs, set rulesets on devices (iptables, firewalls...).
 
@@ -73,7 +73,7 @@ Getting Started
 
 *Coming soon...*
 
-Links
+Links & References
 ----
 
 * Homepage: https://github.com/styx0x6/gremlins
@@ -81,34 +81,55 @@ Links
 * Git repository: git://github.com/styx0x6/gremlins.git
 * Issues tracker: https://github.com/styx0x6/gremlins/issues
 
-References
-----
-
 Some interesting links:
 
 * [http://seclists.org/fulldisclosure/2011/May/434](http://seclists.org/fulldisclosure/2011/May/434)
 
+Roadmap & Changelog
+----
+
+All details are here: [[CHANGELOG](CHANGELOG.md)]
+
 Contributing
 ----
 
+Feel free to submit *issues* and enhancement *pull requests*!
+
+[[Bugs & Support](https://github.com/styx0x6/gremlins/issues)]  
+[[How to contribute to a project on Github](https://gist.github.com/MarcDiethelm/7303312)] by Marc Diethelm
+
+*dev* branch status:  
 [![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=dev)](https://travis-ci.org/styx0x6/gremlins)
 
 Third-Party Librairies
 ----
 
-Gremlins includes bundled packages and here are their associated licensing terms.
+* **Shields.io** - Badges as a service.
+
+    ![License: CC0](https://img.shields.io/badge/License-CC0-lightgrey.svg)  
+    [http://shields.io/](http://shields.io/)  
+    [https://github.com/badges/shields/](https://github.com/badges/shields/)
+
+Gremlins includes bundled packages and below are their associated licensing terms:
 
 * **colorama-0.3.7** - The Colorama library located under `thirdparty/colorama/`.
 
-    Copyright (C) 2013, Jonathan Hartley, BSD 3-Clause license.  
-    [https://pypi.python.org/pypi/colorama/](https://pypi.python.org/pypi/colorama/)
+    Copyright (C) 2013, Jonathan Hartley.  
+    ![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-orange.svg)  
+    [https://pypi.org/project/colorama/](https://pypi.org/project/colorama/)  
+    [https://github.com/tartley/colorama/](https://github.com/tartley/colorama/)
 
 * **paramiko-2.1.1** - The Paramiko library located under `thirdparty/paramiko/`.
 
-    Copyright (C) 2003-2011, Robey Pointer, LGPL license.  
-    [http://www.paramiko.org/](http://www.paramiko.org/)
+    Copyright (C) 2003-2011, Robey Pointer.  
+    Copyright (c) 2013-2018, Jeff Forcier.  
+    ![License: LGPL](https://img.shields.io/badge/License-LGPL-blue.svg)  
+    [http://www.paramiko.org/](http://www.paramiko.org/)  
+    [https://github.com/paramiko/paramiko/](https://github.com/paramiko/paramiko/)
 
 * **requests-2.13.0** - The Requests library located under `thirdparty/requests/`.
 
-    Copyright (C) 2016, Kenneth Reitz, Apache 2.0 license.  
-    [http://docs.python-requests.org/](http://docs.python-requests.org/)
+    Copyright (C) 2016, Kenneth Reitz.  
+    ![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)  
+    [http://docs.python-requests.org/](http://docs.python-requests.org/)  
+    [https://github.com/requests/requests/](https://github.com/requests/requests/)
