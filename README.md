@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=master)](https://travis-ci.org/styx0x6/gremlins)
 [![Python 3.4+](https://img.shields.io/badge/Python-3.4+-blue.svg)](https://www.python.org/)
 [![License AGPL-3.0+](https://img.shields.io/badge/License-AGPL--3.0+-blue.svg)](https://raw.githubusercontent.com/styx0x6/gremlins/master/LICENSE)
+[![Last Release](https://img.shields.io/github/tag/styx0x6/gremlins.svg)](https://github.com/styx0x6/gremlins)
 
 # Gremlins
 
@@ -9,18 +10,23 @@ About
 
 **Gremlins** is an open source tool made to help you to protect your privacy by keeping *gremlins* out of your stuff!
 
-A lot of entities in the world are spying your private and/or self-hosted internet-fronted services like file sharing
-(mainly using BitTorrent) and others... The fundamentals rights that belong to each one of us are to obviously be able
-to block anyone or any entity that would like to be a little bit more curious on our stuff, and prevent them to access
-our services by our simple desire!
+All started [here](http://seclists.org/fulldisclosure/2011/May/434) and with the "HADOPI" French law.
+
+A lot of entities in the world, like the HADOPI agency for example, are spying your private and self-hosted
+internet-fronted services, like file sharing through BitTorrent and others... The fundamentals rights that belong to
+each one of us are obviously to be able to block any of these entities that would like to be too much curious on our
+stuff! And so, prevent them to access our files and services by our simple desire!
 
 If you can prevent anyone to physicaly access your home, you must be able to do the same on your internet-fronted
-services!
+services.
+
+The main purpose of this tool is to facilitate the blocking of *gremlins* onto and from your web services.
 
 _**How it works?**_
 
-The script build a blocking policy based on IPv4/IPv6 addresses. The main feature is the capability to automatically
-set the blocking policy on many devices:
+The script build a blocking policy based on IPv4/IPv6 addresses from **iBlockList** and the **RIPE** database. Requests
+are based on predefined keywords in order to don't block the whole internet... Then, it had the capability to
+automatically set the blocking policy on many devices:
 
 * Linux-based servers via **iptables**
 * **Sophos UTM 9** firewall (v9.408+)
@@ -28,32 +34,25 @@ set the blocking policy on many devices:
 * NetGate **pfSense** firewall *- NOT YET IMPLEMENTED*
 * Deciso **OPNsense** firewall *- NOT YET IMPLEMENTED*
 
-Also the script can simply generate the list to block in CSV format:
+Also the script can simply generate the blocking list in CSV format:
 
     <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
 
-*Workflow:*
+**Warning:**
 
-1. **iBlockList** and **RIPE** database requests based on predefined keywords in order to not block all the internet.
-2. Format IPs in a standard way.
-3. Do what you want: list IPs, set rulesets on devices (iptables, firewalls...).
+This tool has been made to help people to prevent them from being monitored by external entities (governmental or not).
+As protecting you from rubbers, you can, with the help of this tool, protect your sharing services in the same way you
+would did it with your home.
 
-*Additional information:*
+The fact of protecting your infrastructure and services for being stalked by strangers, named here *gremlins*, do
+**NOT** allow you to share protected and copyrighted content without any permission. Gremlins' developpers and
+contributors are not responsible of your acts and they do **NOT** encourage you to do anything wrong or illegal.
 
 _**The script doesn't guarantee a full protection from gremlins, the list isn't guaranteed as exhaustive as
 it's generated from requests based on keywords. Also, it's possible that the generated list contains false-positive but
 it's better to be safe than sorry.**_
 
-**Warning:**
-
-This tool has been made to prevent from being monitored by external entities, govermental or not, as if you would been
-protected from rubbers, you can can protect your sharing services as you would did it for your home.
-
-The fact of protecting you infrastructure/services for being stalked by strangers, named here *gremlins*, do **NOT**
-allow you to share protected and copyrighted content. Gremlins' developpers and contributors are not responsible of
-your acts and we do **NOT** encourage you to do anything wrong or illegal.
-
-Stay in the right way, do only legal things, protect your privacy from *gremlins* and may the force be with you.
+Stay in the right way, do legal things, protect your privacy from *gremlins* and may the force be with you.
 
 Installation
 ----
@@ -65,25 +64,25 @@ Preferably, you can download Gremlins by cloning the [Git](https://github.com/st
 
     git clone --depth 1 https://github.com/styx0x6/gremlins.git gremlins
 
-Gremlins works out of the box with [Python](http://www.python.org/download/) version **3.3** and more on any platform.
-Libraries and dependancies are embedded within the software.
+Gremlins works out of the box with [Python](http://www.python.org/download/) version **3.4** and more on any platform.
+Libraries and dependancies are embedded within the script.
 
 Getting Started
 ----
 
-*Coming soon...*
+`python gremlins.py [-v | -h] [-d] [-c] [-Dc] [-De] [-D4 | -D6] [-Dr, -Di] <command> [<command_options...>]`
 
-Links & References
+![help](help.png)
+
+`python gremlins.py list [-h]`
+
+Links
 ----
 
 * Homepage: https://github.com/styx0x6/gremlins
 * Download: [.tar.gz](https://github.com/styx0x6/gremlins/tarball/master) or [.zip](https://github.com/styx0x6/gremlins/zipball/master)
 * Git repository: git://github.com/styx0x6/gremlins.git
 * Issues tracker: https://github.com/styx0x6/gremlins/issues
-
-Some interesting links:
-
-* [http://seclists.org/fulldisclosure/2011/May/434](http://seclists.org/fulldisclosure/2011/May/434)
 
 Roadmap & Changelog
 ----
