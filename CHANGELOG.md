@@ -24,6 +24,12 @@
 
 # Changelog
 
+## Version 0.2.0 (*Coming soon...*)
+
+* Full RIPE database support.
+* IPv6 full support.
+* Reviewed README file with more running details and fixes.
+
 ## Version 0.1.1 (2018-11-03)
 
 * Removed Python 3.7 from Travis CI build validation.

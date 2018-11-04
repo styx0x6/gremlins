@@ -28,9 +28,9 @@ DESCRIPTION = "Protect your privacy, protect from gremlins!"
 DESCRIPTION_2 = "Keep gremlins out of your stuff!"
 LICENSE = "GNU Affero General Public License (AGPL-3.0+)"
 LICENSE_SHORT = "AGPL-3.0+"
-COPYRIGHT = "Copyright (C) 2017 @styx0x6"
+COPYRIGHT = "Copyright (C) 2018 @styx0x6"
 
-VERSION = "0.1.1"
+VERSION = "0.2.0-dev"
 VERSION_STRING = "%s/%s" % (PROJECT_TITLE, VERSION)
 VALID_PYTHON_VERSION = "3.4"
 
