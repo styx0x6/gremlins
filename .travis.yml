@@ -4,7 +4,16 @@ python:
   - "3.5"
   - "3.6"
   - "nightly"
-  - "pypy3"
+notifications:
+  # email:
+  webhooks:
+    urls:
+      - "https://webhooks.gitter.im/e/13309e26395f39b8205f"
+    on_success: change
+    on_failure: always # default
+    on_start: change
+    on_cancel: always # default
+    on_error: always # default
 script:
   # Test unexpected calls
   - python gremlins.py
