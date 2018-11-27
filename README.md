@@ -12,17 +12,17 @@ About
 
 All started [here](http://seclists.org/fulldisclosure/2011/May/434) and with the "HADOPI" French law.
 
-A lot of entities in the world, like the HADOPI agency for example, are spying your private and self-hosted
-internet-fronted services, like file sharing through BitTorrent and others... The fundamentals rights that belong to
+A lot of entities in the world, like the HADOPI agency in France by example, are spying your private and self-hosted
+internet-fronted services, like file sharing, especially through BitTorrent, and others... The fundamentals rights that belong to
 each one of us are obviously to be able to block any of these entities that would like to be too much curious on our
 stuff! And so, prevent them to access our files and services by our simple desire!
 
 If you can prevent anyone to physicaly access your home, you must be able to do the same on your internet-fronted
 services.
 
-The main purpose of this tool is to facilitate the blocking of *gremlins* onto and from your web services.
+The main purpose of this tool is to facilitate the blocking of *gremlins* onto and from your BitTorrent services.
 
-_**How it works?**_
+**How it works?**
 
 The script build a blocking policy based on IPv4/IPv6 addresses from **iBlockList** and the **RIPE** database. Requests
 are based on predefined keywords in order to don't block the whole internet... Then, it had the capability to
@@ -30,22 +30,22 @@ automatically set the blocking policy on many devices:
 
 * Linux-based servers via **iptables**
 * **Sophos UTM 9** firewall (v9.408+)
-* **FreeboxOS** Download (v3+, APIv4) *- NOT YET IMPLEMENTED*
-* NetGate **pfSense** firewall *- NOT YET IMPLEMENTED*
-* Deciso **OPNsense** firewall *- NOT YET IMPLEMENTED*
+* **FreeboxOS** Download (v3+, APIv4) _- NOT YET IMPLEMENTED_
+* NetGate **pfSense** firewall _- NOT YET IMPLEMENTED_
+* Deciso **OPNsense** firewall _- NOT YET IMPLEMENTED_
 
 Also the script can simply generate the blocking list in CSV format:
 
     <CIDR_IP_RANGE>,<VERSION>,<SOURCE>,<MATCHED_KEYWORD>,<NAME>
 
-**Warning:**
+_**Warning:**_
 
 This tool has been made to help people to prevent them from being monitored by external entities (governmental or not).
-As protecting you from rubbers, you can, with the help of this tool, protect your sharing services in the same way you
-would did it with your home.
+You can protect, with the help of this tool, your sharing services in the same way you
+would did it with your home against rubbers.
 
-The fact of protecting your infrastructure and services for being stalked by strangers, named here *gremlins*, do
-**NOT** allow you to share protected and copyrighted content without any permission. Gremlins' developpers and
+The fact of protecting your infrastructure and services from being stalked by strangers, named here *gremlins*, do
+**NOT** allow you to share protected and copyrighted content without any permission. Gremlins developpers and
 contributors are not responsible of your acts and they do **NOT** encourage you to do anything wrong or illegal.
 
 _**The script doesn't guarantee a full protection from gremlins, the list isn't guaranteed as exhaustive as
@@ -65,7 +65,7 @@ Preferably, you can download Gremlins by cloning the [Git](https://github.com/st
     git clone --depth 1 https://github.com/styx0x6/gremlins.git gremlins
 
 Gremlins works out of the box with [Python](http://www.python.org/download/) version **3.4** and more on any platform.
-Libraries and dependancies are embedded within the script.
+Libraries and dependancies are embedded within the script for better convenience.
 
 Getting Started
 ----
