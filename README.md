@@ -1,7 +1,8 @@
+[![Last Release](https://img.shields.io/github/tag/styx0x6/gremlins.svg?label=Release&colorB=brightgreen)](https://github.com/styx0x6/gremlins)
 [![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=master)](https://travis-ci.org/styx0x6/gremlins)
 [![Python 3.4+](https://img.shields.io/badge/Python-3.4+-blue.svg)](https://www.python.org/)
 [![License AGPL-3.0+](https://img.shields.io/badge/License-AGPL--3.0+-blue.svg)](https://raw.githubusercontent.com/styx0x6/gremlins/master/LICENSE)
-[![Last Release](https://img.shields.io/github/tag/styx0x6/gremlins.svg)](https://github.com/styx0x6/gremlins)
+[![Gitter Chat](https://img.shields.io/badge/Gitter-styx0x6%2fGremlins%20%e2%86%92-grey.svg?colorB=ed1965)](https://gitter.im/styx0x6/Gremlins)
 
 # Gremlins
 
