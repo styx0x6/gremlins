@@ -4,7 +4,6 @@
 
 ### Milestone 1
 
-* Implement **iptables** support.
 * Implement **Sophos UTM 9** support.
 
 ### Milestone 2
@@ -16,15 +15,22 @@
 * Implement **NetGate pfSense** support.
 * Implement **Deciso OPNsense** support.
 * Others ISP home box.
+* Next FreeboxOS (v7/8?) support.
+* Deluge/uTorrent IPBlock auto configuration support.
 
 ## Fixes & Improvments
 
 * SSH with certificates support (implementation + helps to be reviewed).
-* *List to complete...*
+* A better management of keywords to include, with easy customization.
+* Upgrade third-party libraries.
 
 # Changelog
 
 ## Version 0.2.0 (*Coming soon...*)
+
+* Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
+
+* Implemented **iptables** support.
 
 * Full RIPE database support.
 * IPv6 full support.
