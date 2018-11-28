@@ -23,17 +23,18 @@
 * SSH with certificates support (implementation + helps to be reviewed).
 * A better management of keywords to include, with easy customization.
 * Upgrade third-party libraries.
+* iptables: add an option for logging `-l, --log` and logging path `--log-path`.
 
 # Changelog
 
 ## Version 0.2.0 (*Coming soon...*)
 
-* Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
+* Full RIPE database support.
+* IPv6 full support.
 
 * Implemented **iptables** support.
 
-* Full RIPE database support.
-* IPv6 full support.
+* Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
 * Reviewed README file with more running details and fixes.
 
 ## Version 0.1.1 (2018-11-03)
