@@ -29,12 +29,10 @@
 
 ## Version 0.2.0 (*Coming soon...*)
 
-* Full RIPE database support.
-* IPv6 full support.
-
-* Implemented **iptables** support.
+* Full RIPE database support. *TODO*
+* IPv6 full support. *TODO*
+* Implemented **iptables** support. *IN PROGRESS*
 * Added a french version of the README file.
-
 * Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
 * Reviewed README file with more running details and fixes.
 
