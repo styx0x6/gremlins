@@ -33,6 +33,7 @@
 * IPv6 full support.
 
 * Implemented **iptables** support.
+* Added a french version of the README file.
 
 * Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
 * Reviewed README file with more running details and fixes.
