@@ -1,8 +1,8 @@
-[![Last Release](https://img.shields.io/github/tag/styx0x6/gremlins.svg?label=Release&colorB=34bf49)](https://github.com/styx0x6/gremlins)
-[![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=master)](https://travis-ci.org/styx0x6/gremlins)
-[![Python 3.4+](https://img.shields.io/badge/Python-3.4+-blue.svg)](https://www.python.org/)
+[![Last Release](https://img.shields.io/github/tag/styx0x6/gremlins.svg?logo=github&label=Release&colorB=34bf49)](https://github.com/styx0x6/gremlins)
+[![Travis CI Build Status - master](https://img.shields.io/travis/styx0x6/gremlins/master.svg?logo=travis&label=master)](https://travis-ci.org/styx0x6/gremlins)
+[![Python 3.4+](https://img.shields.io/badge/Python-3.4+-blue.svg?logo=python)](https://www.python.org/)
 [![License AGPL-3.0+](https://img.shields.io/badge/License-AGPL--3.0+-blue.svg)](https://raw.githubusercontent.com/styx0x6/gremlins/master/LICENSE)
-[![Gitter Chat](https://img.shields.io/badge/Gitter-styx0x6%2fGremlins%20%e2%86%92-grey.svg?colorB=ed1965)](https://gitter.im/styx0x6/Gremlins)
+[![Gitter Chat](https://img.shields.io/badge/Gitter-styx0x6%2fGremlins%20%e2%86%92-grey.svg?logo=gitter&colorB=ed1965)](https://gitter.im/styx0x6/Gremlins)
 
 Version originale ici: [[README](README.md)]
 
@@ -87,8 +87,7 @@ N'hésitez pas à soumettre vos *bugs* et améliorations par *pull requests* !
 [[Bugs & Support](https://github.com/styx0x6/gremlins/issues)]  
 [[How to contribute to a project on Github](https://gist.github.com/MarcDiethelm/7303312)] by Marc Diethelm
 
-*dev* branch status:  
-[![Build Status](https://travis-ci.org/styx0x6/gremlins.svg?branch=dev)](https://travis-ci.org/styx0x6/gremlins)
+[![Travis CI Build Status - dev](https://img.shields.io/travis/styx0x6/gremlins/dev.svg?logo=travis&label=dev)](https://travis-ci.org/styx0x6/gremlins)
 
 Librairies tierces
 ----
@@ -98,6 +97,12 @@ Librairies tierces
     ![License: CC0](https://img.shields.io/badge/License-CC0-lightgrey.svg)  
     [http://shields.io/](http://shields.io/)  
     [https://github.com/badges/shields/](https://github.com/badges/shields/)
+
+* **Simple Icons** - Icons as a service.
+
+    ![License: CC0](https://img.shields.io/badge/License-CC0-lightgrey.svg)  
+    [https://simpleicons.org/](https://simpleicons.org/)  
+    [https://github.com/simple-icons/simple-icons/](https://github.com/simple-icons/simple-icons/)
 
 Gremlins inclus directement des librairies tierces, leurs licences et termes associés sont disponibles ci-dessous :
 
