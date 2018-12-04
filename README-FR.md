@@ -23,11 +23,11 @@ Le but principal de cet outil est de facilité le blocage de ces *gremlins* vers
 
 **Comment ça fonctionne ?**
 
-Le script construit une politique de blocage basée sur les adresses IPv4/IPv6 fournies par **iBlockList** et la base de données du **RIPE**. Les requêtes se basent sur des mots-clés prédéfinis afin de ne pas bloquer tout internet non plus ... Puis, il paramètre automatiquement la politique de blocage sur plusieurs types d'équipements :
+Le script construit une politique de blocage basée sur les adresses IPv4/IPv6 fournies par **iBlockList** et la base de données du **RIPE**. Les requêtes se basent sur des mots-clés prédéfinis afin de ne pas bloquer tout internet non plus ... Les adresses IP collectées sont compilées et formatées. Puis, le script paramètre automatiquement la politique de blocage sur plusieurs types d'équipements :
 
 * Serveurs basés sur Linux avec **iptables**
 * **Sophos UTM 9** firewall (v9.408+)
-* **FreeboxOS** Download (v3+, APIv4) _- NOT YET IMPLEMENTED_
+* **FreeboxOS** Download (v3+, APIv4)
 * NetGate **pfSense** firewall _- NOT YET IMPLEMENTED_
 * Deciso **OPNsense** firewall _- NOT YET IMPLEMENTED_
 
@@ -60,9 +60,13 @@ Les librairies et dépendances sont incluses avec le script pour plus de simplic
 Guide de démarrage
 ----
 
+Options globales :
+
 `python gremlins.py [-v | -h] [-d] [-c] [-Dc] [-De] [-D4 | -D6] [-Dr, -Di] <command> [<command_options...>]`
 
 ![help](help.png)
+
+* Liste les adresses IP au format CSV :
 
 `python gremlins.py list [-h]`
 

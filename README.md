@@ -28,12 +28,12 @@ The main purpose of this tool is to facilitate the blocking of these *gremlins* 
 **How it works?**
 
 The script build a blocking policy based on IPv4/IPv6 addresses from **iBlockList** and the **RIPE** database. Requests
-are based on predefined keywords in order to don't block the whole internet... Then, it had the capability to
+are based on predefined keywords in order to don't block the whole internet... The collected IP addresses are correlated and formatted. Then, the script had the capability to
 automatically set the blocking policy on many devices:
 
 * Linux-based servers via **iptables**
 * **Sophos UTM 9** firewall (v9.408+)
-* **FreeboxOS** Download (v3+, APIv4) _- NOT YET IMPLEMENTED_
+* **FreeboxOS** Download (v3+, APIv4)
 * NetGate **pfSense** firewall _- NOT YET IMPLEMENTED_
 * Deciso **OPNsense** firewall _- NOT YET IMPLEMENTED_
 
@@ -73,9 +73,13 @@ Libraries and dependancies are embedded within the script for better convenience
 Getting Started
 ----
 
+Global options:
+
 `python gremlins.py [-v | -h] [-d] [-c] [-Dc] [-De] [-D4 | -D6] [-Dr, -Di] <command> [<command_options...>]`
 
 ![help](help.png)
+
+* List the IP addresses in CSV format:
 
 `python gremlins.py list [-h]`
 

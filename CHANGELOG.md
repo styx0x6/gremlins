@@ -2,20 +2,10 @@
 
 ## Features
 
-### Milestone 1
-
-* Implement **Sophos UTM 9** support.
-
-### Milestone 2
-
-* Implement **FreeboxOS Download** support.
-
-### Others
-
 * Implement **NetGate pfSense** support.
 * Implement **Deciso OPNsense** support.
 * Others ISP home box.
-* Next FreeboxOS (v7/8?) support.
+* FreeboxOS One/Delta (API v5?) support.
 * Deluge/uTorrent IPBlock auto configuration support.
 
 ## Fixes & Improvments
@@ -27,11 +17,13 @@
 
 # Changelog
 
-## Version 0.2.0 (*Coming soon...*)
+## Version 1.0.0 (*Coming soon...*)
 
 * Full RIPE database support. *TODO*
 * IPv6 full support. *TODO*
 * Implemented **iptables** support. *IN PROGRESS*
+* Implemented **Sophos UTM 9** support. *TODO*
+* Implemented **FreeboxOS Download** support. *TODO*
 * Added a french version of the README file.
 * Added Travis build notifications on gitter (https://gitter.im/styx0x6/Gremlins).
 * Reviewed README file with more running details and fixes.
